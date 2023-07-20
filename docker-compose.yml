@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:12
+    container_name: icheyka_postgres_new
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres  # todo почему не из env
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=icheyka
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: icheyka_bot_new
+    restart: always
+    command: python -m src.app
+
+volumes:
+  postgres_data:
