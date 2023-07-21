@@ -7,7 +7,8 @@ WORKDIR /code
 RUN apk update && \
     apk add gcc && \
     apk add libc-dev && \
-    apk add libffi-dev
+    apk add libffi-dev && \
+    apk add postgresql-dev
 
 COPY requirements.txt /code/
 RUN pip install --upgrade pip

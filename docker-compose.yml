@@ -3,22 +3,52 @@ version: "3.8"
 services:
   db:
     image: postgres:12
-    container_name: icheyka_postgres_new
+    container_name: test_system_postgres
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_USER=postgres  # todo почему не из env
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=icheyka
-
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./.env
+    networks:
+      - test_system_net
   bot:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: icheyka_bot_new
+    container_name: test_system_bot
     restart: always
-    command: python -m src.app
+    command: python -m bot.app
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+    networks:
+      - test_system_net
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test_system_django
+    restart: always
+    command: >
+      sh -c "python test_app/manage.py migrate &&
+             python test_app/manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+    networks:
+      - test_system_net
 
 volumes:
   postgres_data:
+
+networks:
+  test_system_net:
+    driver: bridge
