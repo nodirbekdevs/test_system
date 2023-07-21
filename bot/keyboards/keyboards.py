@@ -263,6 +263,22 @@ def back_keyboard(language):
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
 
 
+def type_keyboard(language):
+    uz_buttons = [
+        [KeyboardButton(option['types']['uz']['instructor']), KeyboardButton(option['types']['uz']['student'])],
+        [KeyboardButton(option['main']['uz'])]
+    ]
+
+    ru_buttons = [
+        [KeyboardButton(option['types']['ru']['instructor']), KeyboardButton(option['types']['ru']['student'])],
+        [KeyboardButton(option['main']['ru'])]
+    ]
+
+    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
+
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+
+
 def confirmation_advertising_keyboard(language):
     uz_buttons = [
         [KeyboardButton(option['confirmation_advertising']['uz']['yes']),

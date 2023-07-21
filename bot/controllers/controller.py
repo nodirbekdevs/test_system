@@ -11,7 +11,7 @@ class Controller:
         except Exception as error:
             print(error)
 
-    async def get_one(self, query: dict):
+    async def get_one(self, query):
         try:
             return await self.model.query.where(query).gino.first()
         except Exception as error:

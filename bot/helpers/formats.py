@@ -1,12 +1,12 @@
-# from datetime import datetime
-# from src.keyboards.keyboard_buttons import option
-#
-#
-# def introduction_format(name):
-#     message_text = f"Bo'timizga xush kelibsiz {name}. <b>Tilni tanlang</b> {option['language']['uz']} \n"
-#     message_text += f"Добро пожаловать {name}. <b>Выберите язык</b> {option['language']['ru']}"
-#
-#     return message_text
+from datetime import datetime
+from bot.keyboards.keyboard_buttons import option
+
+
+def introduction_format(name):
+    message_text = f"Bo'timizga xush kelibsiz {name}. <b>Tilni tanlang</b> {option['language']['uz']} \n"
+    message_text += f"Добро пожаловать {name}. <b>Выберите язык</b> {option['language']['ru']}"
+
+    return message_text
 #
 #
 # def admin_format(data):

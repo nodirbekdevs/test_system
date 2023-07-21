@@ -116,6 +116,15 @@ option['not_to_confirmation'] = dict()
 option['not_to_confirmation']['uz'] = "Tasdiqlamaslik"
 option['not_to_confirmation']['ru'] = "Не подтверждать"
 
+option['types'] = dict()
+option['types']['uz'] = dict()
+option['types']['uz']['instructor'] = 'Instructor'
+option['types']['uz']['student'] = 'Talaba'
+option['types']['ru'] = dict()
+option['types']['ru']['instructor'] = 'Инструктор'
+option['types']['ru']['student'] = 'Студент'
+
+
 option['feedback'] = dict()
 option['feedback']['uz'] = dict()
 option['feedback']['uz']['good'] = "Yaxshi 👍"
@@ -146,7 +155,7 @@ option['confirmation_advertising']['ru']['no'] = "Неодобрение рек�
 "----- Start of instructor keyboards -----"
 
 instructor = dict()
-
+instructor['pages'] = dict()
 instructor['pages']['uz'] = dict()
 instructor['pages']['uz']['settings'] = "Sozlamalar"
 instructor['pages']['uz']['sections'] = "Testlar"

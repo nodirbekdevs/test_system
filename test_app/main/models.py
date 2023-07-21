@@ -8,6 +8,7 @@ nnb = dict(null=False, blank=False)
 class StatusChoices(models.TextChoices):
     ACTIVE = 'ACT', 'Active'
     IN_ACTIVE = 'INACT', 'Inactive'
+    PROCESS = 'PRC', 'Process'
 
 
 class CreateTracker(models.Model):
