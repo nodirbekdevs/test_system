@@ -78,3 +78,13 @@ class Feedback(CreateUpdateTracker):
     reason = models.CharField(max_length=255, **nnb)
     is_read = models.BooleanField(default=False)
     status = models.CharField(max_length=255, choices=FeedbackStatusChoices.choices, default=FeedbackStatusChoices.ACTIVE)
+
+
+class Advertising(CreateUpdateTracker):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    models.ImageField(upload_to='vacancy_images/', **nnb)
+    file = models.CharField(max_length=255, **nnb)
+    title = models.CharField(max_length=255, **nnb)
+    description = models.CharField(max_length=255, **nnb)
+    is_send = models.BooleanField(default=False)
+    status = models.CharField(max_length=255, choices=StatusChoices.choices, default=StatusChoices.ACTIVE)
