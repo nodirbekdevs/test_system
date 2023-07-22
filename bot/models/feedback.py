@@ -19,3 +19,16 @@ class Feedback(db.Model):
     status = db.Column(db.String(255), default=StatusChoices.ACTIVE)
     updated_at = db.Column(db.DateTime(), default=db.func.now(), onupdate=db.func.now())
     created_at = db.Column(db.DateTime(), default=db.func.now())
+
+    @staticmethod
+    async def count_by_status(user_id, status=None):
+        feedback = await Feedback.query.where(
+            Feedback.user == user_id
+        ).gino.count()
+
+        if status:
+            feedback = await Feedback.query.where(
+                Feedback.user == user_id, Feedback.status == status
+            ).gino.count()
+
+        return feedback

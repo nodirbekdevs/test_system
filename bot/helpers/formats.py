@@ -48,23 +48,23 @@ def user_format(data, language):
     return message
 
 
-# def feedback_all_format(data, language=option['language']['uz']):
-#     message = ""
-#
-#     if language == option['language']['uz']:
-#         message += f"Umumiy izohlar soni - {data['count']}\n"
-#         message += f"Qabul qilingan izohlar soni - {data['active']}\n"
-#         message += f"\nKo'rilgan izohlar soni - {data['seen']}\n"
-#         message += f"Amalga oshirilgan izohlar soni - {data['done']}"
-#     elif language == option['language']['ru']:
-#         message += f"Общее количество комментариев - {data['count']}\n"
-#         message += f"Количество полученных комментариев - {data['active']}\n"
-#         message += f"\nКоличество просмотренных комментариев - {data['seen']}\n"
-#         message += f"Количество сделанных комментариев - {data['done']}"
-#
-#     return message
-#
-#
+def feedback_all_format(data, language=option['language']['uz']):
+    message = ""
+
+    if language == option['language']['uz']:
+        message += f"Umumiy izohlar soni - {data['count']}\n"
+        message += f"Qabul qilingan izohlar soni - {data['active']}\n"
+        message += f"\nKo'rilgan izohlar soni - {data['seen']}\n"
+        message += f"Amalga oshirilgan izohlar soni - {data['done']}"
+    elif language == option['language']['ru']:
+        message += f"Общее количество комментариев - {data['count']}\n"
+        message += f"Количество полученных комментариев - {data['active']}\n"
+        message += f"\nКоличество просмотренных комментариев - {data['seen']}\n"
+        message += f"Количество сделанных комментариев - {data['done']}"
+
+    return message
+
+
 # def feedback_format(data, language=option['language']['uz']):
 #     message = ""
 #

@@ -223,6 +223,22 @@ def is_subscribed_keyboard(language_code, CHANNEL_LINK) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
 
+def feedback_keyboard(language):
+    uz_buttons = [
+        [KeyboardButton(option['feedback']['uz']['good']), KeyboardButton(option['feedback']['uz']['bad'])],
+        [KeyboardButton(option['back']['uz'])]
+    ]
+
+    ru_buttons = [
+        [KeyboardButton(option['feedback']['ru']['good']), KeyboardButton(option['feedback']['ru']['bad'])],
+        [KeyboardButton(option['back']['ru'])]
+    ]
+
+    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
+
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+
+
 def language_keyboard(is_editing=None, language=None):
     buttons = [[KeyboardButton(option['language']['uz']), KeyboardButton(option['language']['ru'])]]
 
