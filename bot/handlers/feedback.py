@@ -31,7 +31,7 @@ async def student_instructor_feedback_handler(message: Message, state: FSMContex
 async def add_student_instructor_feedback_handler(message: Message, state: FSMContext):
     user = await User.get_user_by_telegram_id(message.from_user.id)
 
-    message_text = "Biz haqimizda nima deb o'ylaysiz" if user['lang'] == option['language'][
+    message_text = "Biz haqimizda nima deb o'ylaysiz" if user.lang == option['language'][
         'uz'] else "Что вы думаете о нас"
 
     await FeedbackStates.mark.set()
@@ -48,14 +48,14 @@ async def requesting_student_instructor_feedback_reason_handler(message: Message
         option['feedback']['ru']['good'], option['feedback']['ru']['bad']
     ]:
         error_message = "Sizga berilgan 2 tugmadan birini bosing" \
-            if user['lang'] == option['language']['uz'] else \
+            if user.lang == option['language']['uz'] else \
             "Нажмите одну из двух кнопок, данных вам"
 
         await message.answer(error_message)
         return
 
     message_text = f"Nega {message.text} ligini sababini yozing" \
-        if user['lang'] == option['language']['uz'] else \
+        if user.lang == option['language']['uz'] else \
         f"Напишите причину, по которой {message.text}"
 
     async with state.proxy() as data:
@@ -80,10 +80,10 @@ async def creation_student_instructor_feedback_handler(message: Message, state: 
         return
 
     message_text = "Izohingiz muvaffaqiyatli qoldirildi" \
-        if user['lang'] == option['language']['uz'] else \
+        if user.lang == option['language']['uz'] else \
         "Ваш комментарий успешно отправлен."
 
-    await User.create(user=user.id, mark=data['user_feedback_mark'], reason=message.text)
+    await Feedback.create(user_id=user.id, mark=data['user_feedback_mark'], reason=message.text)
 
     await FeedbackStates.process.set()
 
@@ -101,7 +101,7 @@ async def all_student_instructor_feedback_handler(message: Message, state: FSMCo
 
     if count < 0:
         error_message = "Hozircha siz izoh qoldirmagansiz" \
-            if user['lang'] == option['language']['uz'] else \
+            if user.lang == option['language']['uz'] else \
             "Вы еще не оставили комментарий"
 
         await message.answer(error_message)
@@ -114,6 +114,6 @@ async def all_student_instructor_feedback_handler(message: Message, state: FSMCo
     feedback_data = dict(count=count, active=active, seen=seen, done=done)
 
     await message.answer(
-        feedback_all_format(feedback_data, user['lang']),
-        reply_markup=instructor_feedback_keyboard(user['lang'])
+        feedback_all_format(feedback_data, user.lang),
+        reply_markup=instructor_feedback_keyboard(user.lang)
     )
