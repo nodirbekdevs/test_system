@@ -1,0 +1,25 @@
+from aiogram.types import Message
+from aiogram.dispatcher import FSMContext
+from bot.loader import dp
+from bot.models.user import User
+from bot.keyboards.keyboard_buttons import option
+from bot.keyboards.keyboards import student_pages_keyboard, instructor_pages_keyboard
+from bot.states.user import UserStates
+
+
+@dp.message_handler(text=[option['main']['uz'], option['main']['ru']], state='*')
+async def user_main_handler(message: Message, state: FSMContext):
+    user = await User.get_user_by_telegram_id(message.from_user.id)
+
+    message_text = 'Bosh sahifa' if user.lang == option['language']['uz'] else 'Домашняя страница'
+
+    await UserStates.process.set()
+
+    keyboard = []
+
+    if user.type == User.TypeChoices.INSTRUCTOR:
+        keyboard = instructor_pages_keyboard(user.lang)
+    elif user.type == User.TypeChoices.STUDENT:
+        keyboard = student_pages_keyboard(user.lang)
+
+    await message.answer(message_text, reply_markup=keyboard)

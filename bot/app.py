@@ -5,7 +5,7 @@ from bot.loader import dp, bot, logger
 from bot.db.database import db
 from bot.helpers.config import DB_URL
 
-from bot.handlers import onboarding, register, settings, feedback
+from bot.handlers import onboarding, register, settings, feedback, main
 
 from bot.filters import setup
 from bot.middlewares.admin_creation import AdminCreationMiddleware
