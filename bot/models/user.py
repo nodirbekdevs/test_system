@@ -25,3 +25,7 @@ class User(db.Model):
     status = db.Column(db.String(255), default=StatusChoices.ACTIVE)
     updated_at = db.Column(db.DateTime(), default=db.func.now(), onupdate=db.func.now())
     created_at = db.Column(db.DateTime(), default=db.func.now())
+
+    @staticmethod
+    async def get_user_by_telegram_id(telegram_id):
+        return await User.query.where(User.telegram_id == telegram_id).gino.first()

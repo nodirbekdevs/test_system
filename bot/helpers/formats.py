@@ -1,4 +1,5 @@
 from datetime import datetime
+from bot.models.user import User
 from bot.keyboards.keyboard_buttons import option
 
 
@@ -7,41 +8,46 @@ def introduction_format(name):
     message_text += f"Добро пожаловать {name}. <b>Выберите язык</b> {option['language']['ru']}"
 
     return message_text
-#
-#
-# def admin_format(data):
-#     message = ""
-#
-#     message += "Ma'lumotlaringiz: \n"
-#     message += f"Ismingiz - {data['name']}.\n"
-#     message += f"Telefon raqamingiz - {data['phone']}.\n"
-#     message += f"Username - {data['username']}.\n\n"
-#     message += f"Nimani o'zgartirmoqchisiz ?"
-#
-#     return message
-#
-#
-# def user_format(data, language):
-#     message = ""
-#
-#     if language == option['language']['uz']:
-#         message += "Ma'lumotlaringiz: \n"
-#         message += f"Ism - {data['name']}.\n"
-#         message += f"Telefon raqam - {data['phone']}.\n"
-#         message += f"Username - {data['username']}.\n"
-#         message += f"Tanlangan til - {data['lang']}.\n\n"
-#         message += f"Nimani o'zgartirmoqchisiz ?"
-#     elif language == option['language']['ru']:
-#         message += f"Ваша информация: \n"
-#         message += f"Имя - {data['name']}.\n"
-#         message += f"Номер телефона - +{data['number']}.\n"
-#         message += f"Username - {data['username']}.\n"
-#         message += f"Выбранный язык - {data['lang']}.\n\n"
-#         message += f"Что вы хотите изменить ?"
-#
-#     return message
-#
-#
+
+
+def user_format(data, language):
+    message, type = "", ""
+
+    if data.type == User.TypeChoices.ADMIN:
+        type = 'Admin' if language == option['language']['uz'] else 'Админ'
+    elif data.type == User.TypeChoices.INSTRUCTOR:
+        type = option['types']['uz']['instructor'] \
+            if language == option['language']['uz'] else \
+            option['types']['uz']['instructor']
+    elif data.type == User.TypeChoices.STUDENT:
+        type = option['types']['uz']['student'] \
+            if language == option['language']['uz'] else \
+            option['types']['uz']['student']
+
+    if language == option['language']['uz']:
+        message += (
+            "Ma'lumotlaringiz: \n"
+            f"Ism - {data.name}.\n"
+            f"Telefon raqam - {data.number}.\n"
+            f"Username - {data.username}.\n"
+            f"Tanlangan til - {data.lang}.\n"
+            f"Tur - {type}.\n\n"
+            f"Nimani o'zgartirmoqchisiz ?"
+        )
+    elif language == option['language']['ru']:
+        message += (
+            f"Ваша информация: \n"
+            f"Имя - {data.name}.\n"
+            f"Номер телефона - +{data.number}.\n"
+            f"Username - {data.username}.\n"
+            f"Выбранный язык - {data.lang}.\n"
+            f"Тип - {type}.\n\n"
+            f"Что вы хотите изменить ?"
+        )
+
+    return message
+
+
 # def feedback_all_format(data, language=option['language']['uz']):
 #     message = ""
 #

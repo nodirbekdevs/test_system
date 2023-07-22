@@ -12,7 +12,7 @@ class AdminCreationMiddleware(BaseMiddleware):
         self.bot = bot
 
     async def on_process_message(self, message: Message, data, *args):
-        core_admin = await user_controller.get_one((User.telegram_id==ADMIN_ID, User.status==StatusChoices.PROCESS))
+        core_admin = await User.get_user_by_telegram_id(int(ADMIN_ID))
 
         if core_admin is None:
             try:

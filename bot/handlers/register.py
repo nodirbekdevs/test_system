@@ -1,8 +1,9 @@
 from aiogram.types import Message, ContentTypes, ReplyKeyboardRemove
+from sqlalchemy import and_
 from aiogram.dispatcher import FSMContext
 from bot.loader import dp
 from bot.controllers import user_controller
-from bot.models.user import User
+from bot.models.user import User, StatusChoices
 from bot.helpers.formats import introduction_format
 from bot.helpers.utils import is_num
 from bot.keyboards.keyboard_buttons import option
@@ -15,24 +16,24 @@ from bot.states.user import UserStates
 
 @dp.message_handler(commands='start')
 async def cmd_start(message: Message, state: FSMContext):
-    user = await user_controller.get_one((User.telegram_id == message.from_user.id))
+    user = await User.get_user_by_telegram_id(telegram_id=message.from_user.id)
 
-    if user.type == User.TypeChoices.ADMIN:
-        await AdminStates.process.set()
-        return
+    if user:
+        if user.type == User.TypeChoices.ADMIN:
+            await UserStates.process.set()
+            return
 
-    message_text = 'Bosh sahifa' if option['language']['uz'] else 'Домашняя страница'
+        message_text = 'Bosh sahifa' if user.lang == option['language']['uz'] else 'Домашняя страница'
 
-    if user.type == User.TypeChoices.STUDENT:
-        await UserStates.student_process.set()
+        if user.type == User.TypeChoices.STUDENT:
+            await UserStates.process.set()
+            await message.answer(message_text, reply_markup=student_pages_keyboard(user.lang))
+            return
 
-        await message.answer(message_text, reply_markup=student_pages_keyboard(user.lang))
-        return
-
-    if user.type == User.TypeChoices.INSTRUCTOR:
-        await UserStates.instructor_process.set()
-        await message.answer(message_text, reply_markup=instructor_pages_keyboard(user.lang))
-        return
+        if user.type == User.TypeChoices.INSTRUCTOR:
+            await UserStates.process.set()
+            await message.answer(message_text, reply_markup=instructor_pages_keyboard(user.lang))
+            return
 
     await UserStates.language.set()
 
@@ -128,7 +129,7 @@ async def requesting_user_phone_handler(message: Message, state: FSMContext):
     await message.answer(second_message, reply_markup=send_contact_keyboard(data['user_language']))
 
 
-@dp.message_handler(state=UserStates.phone)
+@dp.message_handler(content_types=ContentTypes.ANY, state=UserStates.phone)
 async def user_creation_handler(message: Message, state: FSMContext):
     data = await state.get_data()
 
@@ -154,18 +155,17 @@ async def user_creation_handler(message: Message, state: FSMContext):
         telegram_id=message.from_user.id,
         name=data.get('user_name'),
         username=message.from_user.username,
-        phone=phone,
+        number=phone,
         lang=data.get('user_language'),
         type=data.get('user_type'),
-        status="active"
+        status=StatusChoices.ACTIVE
     ))
 
-    if data['user_type'] == User.TypeChoices.INSTRUCTOR:
-        await UserStates.instructor_process.set()
-        keyboard = instructor_pages_keyboard(data['user_language'])
-    elif data['user_type'] == User.TypeChoices.STUDENT:
-        await UserStates.student_process.set()
-        keyboard = student_pages_keyboard(data['user_language'])
+    await UserStates.process.set()
+
+    keyboard = instructor_pages_keyboard(data['user_language']) \
+        if data['user_type'] == User.TypeChoices.INSTRUCTOR else \
+        student_pages_keyboard(data['user_language'])
 
     await message.answer(message_text, reply_markup=keyboard)
 

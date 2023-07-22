@@ -1,14 +1,11 @@
-import asyncio
 from aiogram import executor, Dispatcher
-
-from asyncio import get_event_loop
 from logging import INFO
 
 from bot.loader import dp, bot, logger
 from bot.db.database import db
 from bot.helpers.config import DB_URL
 
-from bot.handlers import onboarding
+from bot.handlers import onboarding, register, settings
 
 from bot.filters import setup
 from bot.middlewares.admin_creation import AdminCreationMiddleware
@@ -20,8 +17,8 @@ dp.setup_middleware(AdminCreationMiddleware(bot=bot))
 setup(dp)
 
 
-async def startup(dispatcher):
-    print(DB_URL)
+async def startup(dispatcher: Dispatcher):
+    logger.info(DB_URL)
     await db.set_bind(DB_URL)
     await db.gino.create_all()
     await set_default_commands(dispatcher=dispatcher)
@@ -30,11 +27,11 @@ async def startup(dispatcher):
     logger.warning("Bot started")
 
 
-async def on_shutdown(dispatcher):
+async def shutdown(dispatcher):
     logger.warning("Shutting down..")
     await db.pop_bind().close()
     logger.warning("Bot down")
 
 
 if __name__ == '__main__':
-    executor.start_polling(dp, on_startup=startup)
+    executor.start_polling(dp, on_startup=startup, on_shutdown=shutdown, skip_updates=True)

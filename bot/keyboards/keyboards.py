@@ -223,8 +223,13 @@ def is_subscribed_keyboard(language_code, CHANNEL_LINK) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
 
-def language_keyboard():
+def language_keyboard(is_editing=None, language=None):
     buttons = [[KeyboardButton(option['language']['uz']), KeyboardButton(option['language']['ru'])]]
+
+    if is_editing:
+        buttons.append([option['back']['uz']]) \
+            if language == option['language']['uz'] else \
+            buttons.append([option['back']['ru']])
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
@@ -266,12 +271,10 @@ def back_keyboard(language):
 def type_keyboard(language):
     uz_buttons = [
         [KeyboardButton(option['types']['uz']['instructor']), KeyboardButton(option['types']['uz']['student'])],
-        [KeyboardButton(option['main']['uz'])]
     ]
 
     ru_buttons = [
         [KeyboardButton(option['types']['ru']['instructor']), KeyboardButton(option['types']['ru']['student'])],
-        [KeyboardButton(option['main']['ru'])]
     ]
 
     buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
