@@ -11,6 +11,12 @@ class StatusChoices(models.TextChoices):
     PROCESS = 'PRC', 'Process'
 
 
+class FeedbackStatusChoices(models.TextChoices):
+    ACTIVE = 'ACT', 'Active'
+    SEEN = 'SN', 'Seen'
+    DONE = 'DN', 'Done'
+
+
 class CreateTracker(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -64,3 +70,11 @@ class Test(CreateUpdateTracker):
     variants = ArrayField(models.CharField(max_length=255, **nnb))
     correct_answer = models.CharField(max_length=255, **nnb)
     status = models.CharField(max_length=255, choices=StatusChoices.choices, default=StatusChoices.ACTIVE)
+
+
+class Feedback(CreateUpdateTracker):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    mark = models.CharField(max_length=255, **nnb)
+    reason = models.CharField(max_length=255, **nnb)
+    is_read = models.BooleanField(default=False)
+    status = models.CharField(max_length=255, choices=FeedbackStatusChoices.choices, default=FeedbackStatusChoices.ACTIVE)
