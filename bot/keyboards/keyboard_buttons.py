@@ -179,11 +179,11 @@ instructor['settings']['ru']['lang'] = "Измените язык на плат�
 
 instructor['sections'] = dict()
 instructor['sections']['uz'] = dict()
-instructor['sections']['uz']['all'] = "Ismni o'zgartirish"
-instructor['sections']['uz']['add'] = "Telefon raqamni o'zgartirish"
+instructor['sections']['uz']['all'] = "Barcha bo'limlar"
+instructor['sections']['uz']['add'] = "Bo'lim qo'shish"
 instructor['sections']['ru'] = dict()
-instructor['sections']['ru']['all'] = "Изменение имени"
-instructor['sections']['ru']['add'] = "Изменить номер телефона"
+instructor['sections']['ru']['all'] = "Все разделы"
+instructor['sections']['ru']['add'] = "Добавить раздел"
 
 instructor['tests'] = dict()
 instructor['tests']['uz'] = dict()

@@ -48,7 +48,8 @@ class User(CreateUpdateTracker):
 
 
 class Subject(CreateUpdateTracker):
-    name = models.CharField(max_length=255, **nb)
+    name_uz = models.CharField(max_length=255, **nb)
+    name_ru = models.CharField(max_length=255, **nb)
     description = models.CharField(max_length=255, **nb)
     status = models.CharField(max_length=255, choices=StatusChoices.choices, default=StatusChoices.ACTIVE)
 
@@ -70,6 +71,7 @@ class Test(CreateUpdateTracker):
     variants = ArrayField(models.CharField(max_length=255, **nnb))
     correct_answer = models.CharField(max_length=255, **nnb)
     status = models.CharField(max_length=255, choices=StatusChoices.choices, default=StatusChoices.ACTIVE)
+    is_testing = models.BooleanField(default=False)
 
 
 class Feedback(CreateUpdateTracker):

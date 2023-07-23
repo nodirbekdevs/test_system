@@ -11,7 +11,7 @@ def introduction_format(name):
 
 
 def user_format(data, language):
-    message, type = "", ""
+    message, type = tuple(), ""
 
     if data.type == User.TypeChoices.ADMIN:
         type = 'Admin' if language == option['language']['uz'] else 'Админ'
@@ -49,18 +49,80 @@ def user_format(data, language):
 
 
 def feedback_all_format(data, language=option['language']['uz']):
-    message = ""
+    message = tuple()
 
     if language == option['language']['uz']:
-        message += f"Umumiy izohlar soni - {data['count']}\n"
-        message += f"Qabul qilingan izohlar soni - {data['active']}\n"
-        message += f"\nKo'rilgan izohlar soni - {data['seen']}\n"
-        message += f"Amalga oshirilgan izohlar soni - {data['done']}"
+        message += (
+            f"Umumiy izohlar soni - {data['count']}\n"
+            f"Qabul qilingan izohlar soni - {data['active']}\n"
+            f"\nKo'rilgan izohlar soni - {data['seen']}\n"
+            f"Amalga oshirilgan izohlar soni - {data['done']}"
+        )
     elif language == option['language']['ru']:
-        message += f"Общее количество комментариев - {data['count']}\n"
-        message += f"Количество полученных комментариев - {data['active']}\n"
-        message += f"\nКоличество просмотренных комментариев - {data['seen']}\n"
-        message += f"Количество сделанных комментариев - {data['done']}"
+        message += (
+            f"Общее количество комментариев - {data['count']}\n"
+            f"Количество полученных комментариев - {data['active']}\n"
+            f"\nКоличество просмотренных комментариев - {data['seen']}\n"
+            f"Количество сделанных комментариев - {data['done']}"
+        )
+
+    return message
+
+
+# def one_section_format(data, language):
+#     message = tuple()
+#
+#     if language == option['language']['uz']:
+#         message += (
+#             f"Egasi - {data['user']}\n"
+#             f"Fan - {data['subject']}\n"
+#             f"Nomi - {data['name']}\n"
+#             f"Tavsifi - {data['description']}\n"
+#             f"Umumiy testlar - {data['total_tests']}\n"
+#             f"Holat - {data['status']}\n"
+#             f"Qo'shilgan vaqti - {data['created_at'].strftime('%d.%m.%Y %H:%M')}\n"
+#         )
+#     if language == option['language']['ru']:
+#         message += (
+#             f"Владелец - {data['user']}\n"
+#             f"Наука - {data['subject']}\n"
+#             f"Название - {data['name']}\n"
+#             f"Описание - {data['description']}\n"
+#             f"Общие тесты - {data['total_tests']}\n"
+#             f"Статус - {data['status']}\n"
+#             f"Добавлено время - {data['created_at'].strftime('%d.%m.%Y %H:%M')}\n"
+#         )
+#
+#     return message
+
+
+def one_section_format(data, language, is_editing=False):
+    message = ""
+
+    if not is_editing:
+        message += f"Egasi - {data['user']}\n" if language == option['language']['uz'] else f"Владелец - {data['user']}\n"
+
+    if language == option['language']['uz']:
+        message += f"Fan - {data['subject']}\n"
+        message += f"Nomi - {data['name']}\n"
+        message += f"Tavsifi - {data['description']}\n"
+    if language == option['language']['ru']:
+        message += f"Предмет - {data['subject']}\n"
+        message += f"Название - {data['name']}\n"
+        message += f"Описание - {data['description']}\n"
+
+    if not is_editing:
+        if language == option['language']['uz']:
+            message += f"Testlar soni - {data['total_tests']}\n"
+            message += f"Holat - {data['status']}\n"
+            message += f"Qo'shilgan vaqti - {data['created_at'].strftime('%d.%m.%Y %H:%M')}\n"
+        if language == option['language']['ru']:
+            message += f"Количество тестов - {data['total_tests']}\n"
+            message += f"Статус - {data['status']}\n"
+            message += f"Добавлено время - {data['created_at'].strftime('%d.%m.%Y %H:%M')}\n"
+
+    if is_editing:
+        message += "\nTugaganini tasdiqlaysizmi?" if language == option['language']['uz'] else "\nПодтвердить завершение?"
 
     return message
 

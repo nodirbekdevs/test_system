@@ -277,9 +277,9 @@ def confirmation_keyboard(language):
 
 
 def back_keyboard(language):
-    uz_buttons, ru_buttons = [[KeyboardButton(option['back']['uz'])]], [[KeyboardButton(option['back']['ru'])]]
+    word = option['back']['uz'] if language == option['language']['uz'] else option['back']['ru']
 
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
+    keyboard = [[KeyboardButton(word)]]
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
 
@@ -396,6 +396,24 @@ def instructor_sections_keyboard(language):
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
+def one_section_keyboard(section_id, language):
+    word, back = "", ""
+
+    if language == option['language']['uz']:
+        word = "O'chirish"
+        back = option['back']['uz']
+    elif language == option['language']['ru']:
+        word = "Удалить"
+        back = option['back']['ru']
+
+    buttons = [
+        [InlineKeyboardButton(text=word, callback_data=f"delete.section.{section_id}")],
+        [InlineKeyboardButton(text=back, callback_data="back")]
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 def instructor_tests_keyboard(language):
     uz_buttons = [
         [KeyboardButton(instructor['tests']['uz']['all']), KeyboardButton(instructor['tests']['uz']['add'])],
@@ -487,4 +505,22 @@ def student_feedback_keyboard(language):
 "----- End of student keyboards -----"
 
 
+def subjects_keyboard(data, language, limit=3):
+    buttons, arr = [], []
+
+    for subject in data:
+        if language == option['language']['uz']:
+            arr.append(subject.name_uz)
+        elif language == option['language']['ru']:
+            arr.append(subject.name_ru)
+
+        if len(arr) % limit == 0:
+            buttons.append(arr)
+            arr = []
+
+    buttons.append(arr)
+
+    buttons.append([option['back']['uz']]) if language == option['language']['uz'] else buttons.append([option['back']['ru']])
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
