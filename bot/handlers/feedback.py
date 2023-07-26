@@ -2,6 +2,7 @@ from aiogram.types import Message
 from aiogram.dispatcher import FSMContext
 
 from bot.loader import dp
+from bot.filters.is_not_admin import IsNotAdmin
 from bot.controllers import user_controller, feedback_controller
 from bot.models.feedback import StatusChoices
 from bot.helpers.formats import feedback_all_format
@@ -12,6 +13,7 @@ from bot.states.user import UserStates
 
 
 @dp.message_handler(
+    IsNotAdmin(),
     text=[instructor['pages']['uz']['feedback'], instructor['pages']['ru']['feedback']],
     state=UserStates.process
 )
@@ -26,7 +28,9 @@ async def student_instructor_feedback_handler(message: Message, state: FSMContex
 
 
 @dp.message_handler(
-    text=[instructor['feedback']['uz']['add'], instructor['feedback']['ru']['add']], state=FeedbackStates.process
+    IsNotAdmin(),
+    text=[instructor['feedback']['uz']['add'], instructor['feedback']['ru']['add']],
+    state=FeedbackStates.process
 )
 async def add_student_instructor_feedback_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
@@ -39,7 +43,7 @@ async def add_student_instructor_feedback_handler(message: Message, state: FSMCo
     await message.answer(message_text, reply_markup=feedback_keyboard(user.lang))
 
 
-@dp.message_handler(state=FeedbackStates.mark)
+@dp.message_handler(IsNotAdmin(), state=FeedbackStates.mark)
 async def requesting_student_instructor_feedback_reason_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
@@ -66,7 +70,7 @@ async def requesting_student_instructor_feedback_reason_handler(message: Message
     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
 
 
-@dp.message_handler(state=FeedbackStates.reason)
+@dp.message_handler(IsNotAdmin(), state=FeedbackStates.reason)
 async def creation_student_instructor_feedback_handler(message: Message, state: FSMContext):
     data = await state.get_data()
 
@@ -91,6 +95,7 @@ async def creation_student_instructor_feedback_handler(message: Message, state: 
 
 
 @dp.message_handler(
+    IsNotAdmin(),
     text=[instructor['feedback']['uz']['my_feedback'], instructor['feedback']['ru']['my_feedback']],
     state=FeedbackStates.process
 )
