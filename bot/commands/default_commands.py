@@ -20,7 +20,7 @@ async def set_default_commands(dispatcher: Dispatcher):
 
     await dispatcher.bot.set_my_commands(commands=commands)
 
-    admins = await user_controller.get_one((User.type == User.TypeChoices.ADMIN))
+    admins = await user_controller.get_all(dict(type=User.TypeChoices.ADMIN))
 
     if admins:
         for admin in admins:

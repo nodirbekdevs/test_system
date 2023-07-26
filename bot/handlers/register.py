@@ -1,5 +1,4 @@
 from aiogram.types import Message, ContentTypes, ReplyKeyboardRemove
-from sqlalchemy import and_
 from aiogram.dispatcher import FSMContext
 from bot.loader import dp
 from bot.controllers import user_controller
@@ -16,7 +15,7 @@ from bot.states.user import UserStates
 
 @dp.message_handler(commands='start')
 async def cmd_start(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(telegram_id=message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if user:
         if user.type == User.TypeChoices.ADMIN:
@@ -133,14 +132,14 @@ async def requesting_user_phone_handler(message: Message, state: FSMContext):
 async def user_creation_handler(message: Message, state: FSMContext):
     data = await state.get_data()
 
-    phone, keyboard = 0, []
+    number, keyboard = 0, []
 
     if message.text:
-        phone = message.text
+        number = message.text
     elif message.contact:
-        phone = message.contact.phone_number
+        number = message.contact.phone_number
 
-    if not is_num(phone):
+    if not is_num(number):
         error_message = "Telefon raqam sonlardan iborat bo'lishi kerak" \
             if data['user_language'] == option['language']['uz'] else \
             "Номер телефона должен содержать цифры"
@@ -155,7 +154,7 @@ async def user_creation_handler(message: Message, state: FSMContext):
         telegram_id=message.from_user.id,
         name=data.get('user_name'),
         username=message.from_user.username,
-        number=phone,
+        number=number,
         lang=data.get('user_language'),
         type=data.get('user_type'),
         status=StatusChoices.ACTIVE

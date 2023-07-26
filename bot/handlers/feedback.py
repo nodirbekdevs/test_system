@@ -2,8 +2,8 @@ from aiogram.types import Message
 from aiogram.dispatcher import FSMContext
 
 from bot.loader import dp
-from bot.models.user import User
-from bot.models.feedback import Feedback, StatusChoices
+from bot.controllers import user_controller, feedback_controller
+from bot.models.feedback import StatusChoices
 from bot.helpers.formats import feedback_all_format
 from bot.keyboards.keyboard_buttons import option, instructor
 from bot.keyboards.keyboards import instructor_feedback_keyboard, feedback_keyboard, back_keyboard
@@ -16,7 +16,7 @@ from bot.states.user import UserStates
     state=UserStates.process
 )
 async def student_instructor_feedback_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     message_text = "Izohlar bo'limi" if user.lang == option['language']['uz'] else "Страница комментарии"
 
@@ -29,7 +29,7 @@ async def student_instructor_feedback_handler(message: Message, state: FSMContex
     text=[instructor['feedback']['uz']['add'], instructor['feedback']['ru']['add']], state=FeedbackStates.process
 )
 async def add_student_instructor_feedback_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     message_text = "Biz haqimizda nima deb o'ylaysiz" if user.lang == option['language'][
         'uz'] else "Что вы думаете о нас"
@@ -41,7 +41,7 @@ async def add_student_instructor_feedback_handler(message: Message, state: FSMCo
 
 @dp.message_handler(state=FeedbackStates.mark)
 async def requesting_student_instructor_feedback_reason_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text not in [
         option['feedback']['uz']['good'], option['feedback']['uz']['bad'],
@@ -70,7 +70,7 @@ async def requesting_student_instructor_feedback_reason_handler(message: Message
 async def creation_student_instructor_feedback_handler(message: Message, state: FSMContext):
     data = await state.get_data()
 
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         error_message = "Bekor qilindi" if user['lang'] == option['language']['uz'] else "Отменено"
@@ -83,7 +83,7 @@ async def creation_student_instructor_feedback_handler(message: Message, state: 
         if user.lang == option['language']['uz'] else \
         "Ваш комментарий успешно отправлен."
 
-    await Feedback.create(user_id=user.id, mark=data['user_feedback_mark'], reason=message.text)
+    await feedback_controller.make(dict(user_id=user.id, mark=data['user_feedback_mark'], reason=message.text))
 
     await FeedbackStates.process.set()
 
@@ -95,9 +95,9 @@ async def creation_student_instructor_feedback_handler(message: Message, state: 
     state=FeedbackStates.process
 )
 async def all_student_instructor_feedback_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    count = await Feedback.count_by_status(user.id)
+    count = await feedback_controller.count(dict(user_id=user.id))
 
     if count < 0:
         error_message = "Hozircha siz izoh qoldirmagansiz" \
@@ -107,9 +107,9 @@ async def all_student_instructor_feedback_handler(message: Message, state: FSMCo
         await message.answer(error_message)
         return
 
-    active = await Feedback.count_by_status(user_id=user.id, status=StatusChoices.ACTIVE)
-    seen = await Feedback.count_by_status(user_id=user.id, status=StatusChoices.SEEN)
-    done = await Feedback.count_by_status(user_id=user.id, status=StatusChoices.DONE)
+    active = await feedback_controller.count(dict(user_id=user.id, status=StatusChoices.ACTIVE))
+    seen = await feedback_controller.count(dict(user_id=user.id, status=StatusChoices.SEEN))
+    done = await feedback_controller.count(dict(user_id=user.id, status=StatusChoices.DONE))
 
     feedback_data = dict(count=count, active=active, seen=seen, done=done)
 

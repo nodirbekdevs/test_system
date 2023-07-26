@@ -4,6 +4,7 @@ from aiogram.types import CallbackQuery, Message
 from deep_translator import GoogleTranslator
 
 from bot.loader import dp
+from bot.controllers import user_controller, section_controller, test_controller, subject_controller
 from bot.models.user import User
 from bot.models.section import Section
 from bot.models.test import Test
@@ -24,7 +25,7 @@ from bot.states.user import UserStates
     state=UserStates.process
 )
 async def instructor_sections_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     message_text = "Bo'limlar sahifasi" if user.lang == option['language']['uz'] else "Страница разделов"
 
@@ -39,18 +40,19 @@ async def instructor_sections_handler(message: Message, state: FSMContext):
     state=SectionStates.process
 )
 async def all_sections_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    paginated = await Pagination(data_type="SECTION").paginate(query={}, page=1, limit=6, language=user.lang)
+    paginated = await Pagination(data_type="SECTION").paginate(query=dict(), page=1, limit=6, language=user.lang)
 
-    await SectionStates.all_sections.set()
+    if not paginated['status']:
+        await SectionStates.all_sections.set()
 
     await message.answer(text=paginated['message'], reply_markup=paginated['keyboard'])
 
 
 @dp.callback_query_handler(IsInstructor(), lambda query: query.data == "delete", state=SectionStates.all_sections)
 async def back_from_all_sections_handler(query: CallbackQuery, state: FSMContext):
-    user = await User.get_user_by_telegram_id(query.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
     message_text = "Bo'limlar sahifasi" if user.lang == option['language']['uz'] else "Страница разделов"
 
@@ -65,9 +67,9 @@ async def back_from_all_sections_handler(query: CallbackQuery, state: FSMContext
     state=SectionStates.all_sections
 )
 async def pagination_instructor_sections_handler(query: CallbackQuery, state: FSMContext):
-    user = await User.get_user_by_telegram_id(query.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    paginated = await Pagination(data_type="SECTION").paginate(query={}, page=1, limit=6, language=user.lang)
+    paginated = await Pagination(data_type="SECTION").paginate(query=dict(), page=1, limit=6, language=user.lang)
 
     await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
 
@@ -78,9 +80,9 @@ async def pagination_instructor_sections_handler(query: CallbackQuery, state: FS
 async def get_instructor_section_handler(query: CallbackQuery, state: FSMContext):
     id = query.data.split("-")[1]
 
-    user = await User.get_user_by_telegram_id(query.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    section = await Section.get_by_id(int(id))
+    section = await section_controller.get_one(dict(id=int(id)))
 
     await SectionStates.one_section.set()
 
@@ -103,9 +105,12 @@ async def get_instructor_section_handler(query: CallbackQuery, state: FSMContext
 async def back_from_get_product_handler(query: CallbackQuery, state: FSMContext):
     user = await User.get_user_by_telegram_id(query.from_user.id)
 
-    paginated = await Pagination(data_type="SECTION").paginate(query={}, page=1, limit=6, language=user.lang)
+    paginated = await Pagination(data_type="SECTION").paginate(query=dict(), page=1, limit=6, language=user.lang)
 
     await SectionStates.all_sections.set()
+
+    if not paginated['status']:
+        await SectionStates.process.set()
 
     await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
 
@@ -116,21 +121,22 @@ async def back_from_get_product_handler(query: CallbackQuery, state: FSMContext)
 async def delete_product_handler(query: CallbackQuery, state: FSMContext):
     id = query.data.split(".")[2]
 
-    user = await User.get_user_by_telegram_id(query.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    section = await Section.get_by_id(int(id))
+    section = await section_controller.get_one(dict(id=int(id)))
 
-    test = await Test.test_is_being_resolved(section.id)
+    tests = await section_controller.get_all(dict(section_id=section.id))
 
-    if not test:
-        error_message = "Hozir bo'limni o'chiraolmaysiz. Chunki test hozir yechilyabti" \
-            if user.lang == option['language']['uz'] else \
-            "Вы не можете удалить раздел сейчас. Поскольку тест в настоящее время решается"
+    for test in tests:
+        if test.is_testing:
+            error_message = "Hozir bo'limni o'chiraolmaysiz. Chunki test hozir yechilyabti" \
+                if user.lang == option['language']['uz'] else \
+                "Вы не можете удалить раздел сейчас. Поскольку тест в настоящее время решается"
 
-        await query.message.answer(text=error_message)
-        return
+            await query.message.answer(text=error_message)
+            return
 
-    deleting = await Section.delete_by_id(section.id)
+    deleting = await section_controller.delete(dict(id=section.id))
 
     if not deleting:
         error_message = "Nimadir noto'g'ri bajarildi. Bir ozdan so'ng harakat qilib ko'ring." \
@@ -140,7 +146,7 @@ async def delete_product_handler(query: CallbackQuery, state: FSMContext):
         await query.message.answer(text=error_message)
         return
 
-    paginated = await Pagination(data_type="SECTION").paginate(query={}, page=1, limit=6, language=user.lang)
+    paginated = await Pagination(data_type="SECTION").paginate(query=dict(), page=1, limit=6, language=user.lang)
 
     await SectionStates.all_sections.set()
 
@@ -153,8 +159,8 @@ async def delete_product_handler(query: CallbackQuery, state: FSMContext):
     state=SectionStates.process
 )
 async def requesting_subject_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
-    subjects = await Subject.get_all()
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
+    subjects = await subject_controller.get_all()
 
     await SectionStates.subject.set()
 
@@ -167,7 +173,7 @@ async def requesting_subject_handler(message: Message, state: FSMContext):
 
 @dp.message_handler(IsInstructor(), state=SectionStates.subject)
 async def requesting_name_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
         error_message = "Raqam jo'natmang!" if user.lang == option['language']['uz'] else "Не присылайте номер!"
@@ -181,7 +187,7 @@ async def requesting_name_handler(message: Message, state: FSMContext):
         await instructor_sections_handler(message, state)
         return
 
-    subject_checking = await Subject.check_by_name(message.text)
+    subject_checking = await subject_controller.get_one(dict(name_uz=message.text, name_ru=message.text))
 
     if not subject_checking:
         error_message = "Berilgan fanlardan birini tanlang" \
@@ -203,7 +209,7 @@ async def requesting_name_handler(message: Message, state: FSMContext):
 
 @dp.message_handler(state=SectionStates.name)
 async def requesting_description_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
         error_message = "Raqam jo'natmang!" if user.lang == option['language']['uz'] else "Не присылайте номер!"
@@ -217,7 +223,7 @@ async def requesting_description_handler(message: Message, state: FSMContext):
         await instructor_sections_handler(message, state)
         return
 
-    section_checking = await Section.check_by_name(message.text)
+    section_checking = await section_controller.get_one(dict(user_id=user.id, name=message.text))
 
     if section_checking:
         error_message = "Bu nom bilan bo'lim mavjud" \
@@ -239,7 +245,7 @@ async def requesting_description_handler(message: Message, state: FSMContext):
 
 @dp.message_handler(state=SectionStates.description)
 async def checking_section_creation_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
         error_message = "Raqam jo'natmang!" if user.lang == option['language']['uz'] else "Не присылайте номер!"
@@ -273,7 +279,7 @@ async def checking_section_creation_handler(message: Message, state: FSMContext)
 
 @dp.message_handler(IsInstructor(), state=SectionStates.checking)
 async def section_creation_handler(message: Message, state: FSMContext):
-    user = await User.get_user_by_telegram_id(message.from_user.id)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
         error_message = "Raqam jo'natmang!" if user.lang == option['language']['uz'] else "Не присылайте номер!"
@@ -301,7 +307,9 @@ async def section_creation_handler(message: Message, state: FSMContext):
 
     subject, name, description = data.get('section_subject'), data.get('section_name'), data.get('section_description')
 
-    subject = await Subject.check_by_name(name)
+    subject_data = dict(name_uz=name) if user.lang == option['language']['uz'] else dict(name_ru=name)
+
+    subject = await subject_controller.get_one(subject_data)
 
     section = await Section.create(
         user_id=user.id,

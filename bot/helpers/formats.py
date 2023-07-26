@@ -4,10 +4,12 @@ from bot.keyboards.keyboard_buttons import option
 
 
 def introduction_format(name):
-    message_text = f"Bo'timizga xush kelibsiz {name}. <b>Tilni tanlang</b> {option['language']['uz']} \n"
-    message_text += f"Добро пожаловать {name}. <b>Выберите язык</b> {option['language']['ru']}"
+    message = (
+        f"Bo'timizga xush kelibsiz {name}. <b>Tilni tanlang</b> {option['language']['uz']} \n"
+        f"Добро пожаловать {name}. <b>Выберите язык</b> {option['language']['ru']}"
+    )
 
-    return message_text
+    return message
 
 
 def user_format(data, language):
@@ -25,7 +27,7 @@ def user_format(data, language):
             option['types']['uz']['student']
 
     if language == option['language']['uz']:
-        message += (
+        message = (
             "Ma'lumotlaringiz: \n"
             f"Ism - {data.name}.\n"
             f"Telefon raqam - {data.number}.\n"
@@ -35,7 +37,7 @@ def user_format(data, language):
             f"Nimani o'zgartirmoqchisiz ?"
         )
     elif language == option['language']['ru']:
-        message += (
+        message = (
             f"Ваша информация: \n"
             f"Имя - {data.name}.\n"
             f"Номер телефона - +{data.number}.\n"
@@ -52,14 +54,14 @@ def feedback_all_format(data, language=option['language']['uz']):
     message = tuple()
 
     if language == option['language']['uz']:
-        message += (
+        message = (
             f"Umumiy izohlar soni - {data['count']}\n"
             f"Qabul qilingan izohlar soni - {data['active']}\n"
             f"\nKo'rilgan izohlar soni - {data['seen']}\n"
             f"Amalga oshirilgan izohlar soni - {data['done']}"
         )
     elif language == option['language']['ru']:
-        message += (
+        message = (
             f"Общее количество комментариев - {data['count']}\n"
             f"Количество полученных комментариев - {data['active']}\n"
             f"\nКоличество просмотренных комментариев - {data['seen']}\n"
@@ -100,7 +102,8 @@ def one_section_format(data, language, is_editing=False):
     message = ""
 
     if not is_editing:
-        message += f"Egasi - {data['user']}\n" if language == option['language']['uz'] else f"Владелец - {data['user']}\n"
+        message += f"Egasi - {data['user']}\n" if language == option['language'][
+            'uz'] else f"Владелец - {data['user']}\n"
 
     if language == option['language']['uz']:
         message += f"Fan - {data['subject']}\n"
@@ -122,7 +125,8 @@ def one_section_format(data, language, is_editing=False):
             message += f"Добавлено время - {data['created_at'].strftime('%d.%m.%Y %H:%M')}\n"
 
     if is_editing:
-        message += "\nTugaganini tasdiqlaysizmi?" if language == option['language']['uz'] else "\nПодтвердить завершение?"
+        message += "\nTugaganini tasdiqlaysizmi ?" if language == option['language'][
+            'uz'] else "\nПодтвердить завершение ?"
 
     return message
 
@@ -176,27 +180,36 @@ def one_section_format(data, language, is_editing=False):
 #     return message
 #
 #
-# def advertising_format(data, is_ending=False):
-#     message = ""
-#
-#     message += f"<b>{data['title']}</b>\n"
-#     message += f"\n<pre>{data['description']}</pre>"
-#
-#     if is_ending:
-#         message += "\n\nTugatilganini tasdiqlaysizmi ?"
-#
-#     return message
-#
-#
-# def advertising_number_format(data):
-#     message = ""
-#
-#     message += f"Umumiy reklamalar soni - {data['number']}\n"
-#     message += f"Tugallangan reklamalar soni - {data['active']}\n"
-#     message += f"Xato reklamalar soni - {data['inactive']}\n"
-#     message += f"Tasdiqlangan reklamalar soni - {data['approved']}"
-#
-#     return message
+def advertising_format(data, language, is_ending=False):
+    message = ""
+
+    message += f"<b>{data['title']}</b>\n"
+    message += f"\n<pre>{data['description']}</pre>\n"
+
+    if is_ending:
+        message += "\nTugatilganini tasdiqlaysizmi ?" if language == option['language'][
+            'uz'] else "\nПодтвердить завершение ?"
+
+    return message
+
+
+def advertising_number_format(data, language):
+    message = tuple()
+
+    if language == option['language']['uz']:
+        message = (
+            f"Umumiy reklamalar soni - {data['number']}\n"
+            f"Tugallangan reklamalar soni - {data['active']}\n"
+            f"O'chirilgan reklamalar soni - {data['inactive']}\n"
+        )
+    elif language == option['language']['ru']:
+        message = (
+            f"Общее количество объявлений - {data['number']}\n"
+            f"Количество завершенных объявлений - {data['active']}\n"
+            f"Количество удаленных объявлений - {data['inactive']}\n"
+        )
+
+    return message
 #
 #
 # def salutation_format(data, is_editing=False):

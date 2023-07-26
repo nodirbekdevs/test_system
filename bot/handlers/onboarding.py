@@ -14,10 +14,10 @@ from bot.states.user import UserStates
 
 @dp.callback_query_handler(lambda query: query.data == IS_SUBSCRIBED, state='*')
 async def check_is_subscribed(query: CallbackQuery, state: FSMContext):
-    user = await user_controller.get_one(and_(User.telegram_id == query.from_user.id))
+    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
     if not await is_subscribed(bot, query.message, CHANNEL_ID):
-        language_code = user['lang'] if user else query.from_user.language_code
+        language_code = user.lang if user else query.from_user.language_code
 
         message_text = "Siz kanalga obuna bo'lmagansiz" if language_code in languages_uz else "Вы не подписаны на канал"
 
