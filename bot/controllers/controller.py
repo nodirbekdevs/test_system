@@ -3,7 +3,6 @@ from bot.db.database import db
 from bot.helpers.config import GET, POST, PUT, DELETE, COUNT, SINGLE, ALL
 
 
-
 class Controller:
     def __init__(self, model):
         self.model = model
@@ -70,12 +69,6 @@ class Controller:
     async def update(self, query: dict, data: dict):
         try:
             return await self.process(method=PUT, query=query, data=data)
-        except Exception as error:
-            print(error)
-
-    async def increment(self, query: dict, data: dict):
-        try:
-            await self.model.update.values(data).where(query).gino.status()
         except Exception as error:
             print(error)
 

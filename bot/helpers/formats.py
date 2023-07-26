@@ -131,55 +131,55 @@ def one_section_format(data, language, is_editing=False):
     return message
 
 
-# def feedback_format(data, language=option['language']['uz']):
-#     message = ""
-#
-#     if language == option['language']['uz']:
-#         message += f"Avtor - {data['author']}\n"
-#         message += f"Bahosi - {data['mark']}\n"
-#         message += f"Sababi - {data['reason']}\n"
-#         message += f"Holati - {data['status']}\n"
-#         message += f"Yozilgan vaqti - {datetime.strptime(data['created_at'], '%d.%m.%Y %H:%M')}"
-#     if language == option['language']['ru']:
-#         message += f"Автор - {data['author']}\n"
-#         message += f"Рейтинг - {data['mark']}\n"
-#         message += f"Причина - {data['reason']}\n"
-#         message += f"Статус - {data['status']}\n"
-#         message += f"Записанное время - {datetime.strptime(data['created_at'], '%d.%m.%Y %H:%M')}"
-#
-#     return message
-#
-#
-# def feedback_seen_format(data, language=option['language']['uz']):
-#     message = ""
-#
-#     if language == option['language']['uz']:
-#         message += f"Assalomu Aleykum {data['name']}\n"
-#         message += f"Siz yozgan izoh ustida ishlar boshlandi\n"
-#         message += f"Izoh - {data['feedback']}"
-#     if language == option['language']['ru']:
-#         message += f"Assalomu Aleykum {data['name']}\n"
-#         message += f"Ваш комментарий обработан\n"
-#         message += f"Комментария - {data['feedback']}"
-#
-#     return message
-#
-#
-# def feedback_done_format(data, language=option['language']['uz']):
-#     message = ""
-#
-#     if language == option['language']['uz']:
-#         message += f"Assalomu Aleykum {data['name']}\n"
-#         message += f"Siz yozgan izoh ustida ishlar tugallandi. Muammo bartaraf etildi\n"
-#         message += f"Izoh - {data['feedback']}"
-#     elif language == option['language']['ru']:
-#         message += f"Assalomu Aleykum {data['name']}\n"
-#         message += f"Ваш комментарий обработан. Проблема решена\n"
-#         message += f"Комментария - {data['feedback']}"
-#
-#     return message
-#
-#
+def feedback_format(data, language=option['language']['uz']):
+    message = ""
+
+    if language == option['language']['uz']:
+        message += f"Avtor - {data['author']}\n"
+        message += f"Bahosi - {data['mark']}\n"
+        message += f"Sababi - {data['reason']}\n"
+        message += f"Holati - {data['status']}\n"
+        message += f"Yozilgan vaqti - {datetime.strptime(data['created_at'], '%d.%m.%Y %H:%M')}"
+    if language == option['language']['ru']:
+        message += f"Автор - {data['author']}\n"
+        message += f"Рейтинг - {data['mark']}\n"
+        message += f"Причина - {data['reason']}\n"
+        message += f"Статус - {data['status']}\n"
+        message += f"Записанное время - {datetime.strptime(data['created_at'], '%d.%m.%Y %H:%M')}"
+
+    return message
+
+
+def feedback_seen_format(data, language=option['language']['uz']):
+    message = ""
+
+    if language == option['language']['uz']:
+        message += f"Assalomu Aleykum {data['name']}\n"
+        message += f"Siz yozgan izoh ustida ishlar boshlandi\n"
+        message += f"Izoh - {data['feedback']}"
+    if language == option['language']['ru']:
+        message += f"Assalomu Aleykum {data['name']}\n"
+        message += f"Ваш комментарий обработан\n"
+        message += f"Комментария - {data['feedback']}"
+
+    return message
+
+
+def feedback_done_format(data, language=option['language']['uz']):
+    message = ""
+
+    if language == option['language']['uz']:
+        message += f"Assalomu Aleykum {data['name']}\n"
+        message += f"Siz yozgan izoh ustida ishlar tugallandi. Muammo bartaraf etildi\n"
+        message += f"Izoh - {data['feedback']}"
+    elif language == option['language']['ru']:
+        message += f"Assalomu Aleykum {data['name']}\n"
+        message += f"Ваш комментарий обработан. Проблема решена\n"
+        message += f"Комментария - {data['feedback']}"
+
+    return message
+
+
 def advertising_format(data, language, is_ending=False):
     message = ""
 
