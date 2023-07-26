@@ -12,8 +12,8 @@ def introduction_format(name):
     return message
 
 
-def user_format(data, language):
-    message, type = tuple(), ""
+def user_format(data, language, is_editing=False):
+    message, type = "", ""
 
     if data.type == User.TypeChoices.ADMIN:
         type = 'Admin' if language == option['language']['uz'] else 'Админ'
@@ -27,25 +27,24 @@ def user_format(data, language):
             option['types']['uz']['student']
 
     if language == option['language']['uz']:
-        message = (
-            "Ma'lumotlaringiz: \n"
-            f"Ism - {data.name}.\n"
-            f"Telefon raqam - {data.number}.\n"
-            f"Username - {data.username}.\n"
-            f"Tanlangan til - {data.lang}.\n"
-            f"Tur - {type}.\n\n"
-            f"Nimani o'zgartirmoqchisiz ?"
-        )
+        message += "Ma'lumotlaringiz: \n"
+        message += f"Ism - {data.name}.\n"
+        message += f"Telefon raqam - {data.number}.\n"
+        message += f"Username - {data.username}.\n"
+        message += f"Tanlangan til - {data.lang}.\n"
+        message += f"Tur - {type}."
     elif language == option['language']['ru']:
-        message = (
-            f"Ваша информация: \n"
-            f"Имя - {data.name}.\n"
-            f"Номер телефона - +{data.number}.\n"
-            f"Username - {data.username}.\n"
-            f"Выбранный язык - {data.lang}.\n"
-            f"Тип - {type}.\n\n"
-            f"Что вы хотите изменить ?"
-        )
+        message += f"Ваша информация: \n"
+        message += f"Имя - {data.name}.\n"
+        message += f"Номер телефона - +{data.number}.\n"
+        message += f"Username - {data.username}.\n"
+        message += f"Выбранный язык - {data.lang}.\n"
+        message += f"Тип - {type}."
+
+    if is_editing:
+        message += f"\n\nNimani o'zgartirmoqchisiz ?" \
+            if language == option['language']['uz'] else \
+            f"\n\nЧто вы хотите изменить ?"
 
     return message
 

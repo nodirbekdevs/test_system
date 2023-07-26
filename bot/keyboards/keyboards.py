@@ -203,6 +203,15 @@ def admin_subjects_keyboard(language):
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
+def one_admin_keyboard(id) -> InlineKeyboardMarkup:
+    buttons = [
+        [InlineKeyboardButton(text="Удалить", callback_data=f"delete.admin.{id}")],
+        [InlineKeyboardButton(text="Назад", callback_data="back")],
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 "----- End of admin keyboards -----"
 
 
