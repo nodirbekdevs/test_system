@@ -183,8 +183,8 @@ def one_section_format(data, language, is_editing=False):
 def advertising_format(data, language, is_ending=False):
     message = ""
 
-    message += f"<b>{data['title']}</b>\n"
-    message += f"\n<pre>{data['description']}</pre>\n"
+    message += f"<b>{data.title}</b>\n"
+    message += f"\n<pre>{data.description}</pre>\n"
 
     if is_ending:
         message += "\nTugatilganini tasdiqlaysizmi ?" if language == option['language'][

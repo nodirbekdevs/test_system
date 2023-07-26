@@ -15,7 +15,7 @@ class Advertising(db.Model):
     file = db.Column(db.String(255), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.String(255), nullable=False)
-    is_read = db.Column(db.Boolean, default=False)
+    is_send = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(255), default=StatusChoices.ACTIVE)
     updated_at = db.Column(db.DateTime(), default=db.func.now(), onupdate=db.func.now())
     created_at = db.Column(db.DateTime(), default=db.func.now())
