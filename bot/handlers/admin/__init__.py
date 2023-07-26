@@ -7,7 +7,6 @@ from bot.filters.is_admin import IsAdmin
 from bot.keyboards.keyboard_buttons import option
 from bot.keyboards.keyboards import admin_pages_keyboard
 from bot.states.user import UserStates
-from bot.states.feedback import FeedbackStates
 
 
 @dp.message_handler(IsAdmin(), text=[option['start'], option['main']['uz'], option['main']['ru']], state='*')
@@ -30,13 +29,3 @@ async def paginate_handler(query: CallbackQuery, state: FSMContext):
         "Здесь нет информации. Вы выбрали не ту страницу."
 
     await query.answer(text=message_text, show_alert=True)
-
-
-async def back_from_feedback_pagination_handler(query: CallbackQuery, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
-    await query.message.delete()
-    await FeedbackStates.process.set()
-
-    message_text = 'Izohlar sahifasi' if user.lang == option['language']['uz'] else "Страница комментариев"
-
-    await query.message.answer(message_text, reply_markup=admin_feedback_keyboard(user.lang))

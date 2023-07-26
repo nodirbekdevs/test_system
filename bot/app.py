@@ -6,7 +6,7 @@ from bot.db.database import db
 from bot.helpers.config import DB_URL
 
 from bot.handlers import onboarding, register, settings, feedback, main
-from bot.handlers.admin import advertisements
+from bot.handlers.admin import advertisements, feedback
 
 from bot.filters import setup
 from bot.middlewares.admin_creation import AdminCreationMiddleware
@@ -28,7 +28,7 @@ async def startup(dispatcher: Dispatcher):
     logger.warning("Bot started")
 
 
-async def shutdown(dispatcher):
+async def shutdown(dispatcher: Dispatcher):
     logger.warning("Shutting down..")
     await db.pop_bind().close()
     logger.warning("Bot down")

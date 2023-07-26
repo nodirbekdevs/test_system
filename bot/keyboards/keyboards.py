@@ -11,12 +11,14 @@ def admin_pages_keyboard(language):
         [KeyboardButton(admin['pages']['uz']['settings']), KeyboardButton(admin['pages']['uz']['admins'])],
         [KeyboardButton(admin['pages']['uz']['instructors']), KeyboardButton(admin['pages']['uz']['students'])],
         [KeyboardButton(admin['pages']['uz']['subjects']), KeyboardButton(admin['pages']['uz']['advertisements'])],
+        [KeyboardButton(admin['pages']['uz']['feedback'])]
     ]
 
     ru_buttons = [
         [KeyboardButton(admin['pages']['ru']['settings']), KeyboardButton(admin['pages']['ru']['admins'])],
         [KeyboardButton(admin['pages']['ru']['instructors']), KeyboardButton(admin['pages']['ru']['students'])],
         [KeyboardButton(admin['pages']['ru']['subjects']), KeyboardButton(admin['pages']['ru']['advertisements'])],
+        [KeyboardButton(admin['pages']['ru']['feedback'])]
     ]
 
     buttons = uz_buttons if language == option['language']['uz'] else ru_buttons

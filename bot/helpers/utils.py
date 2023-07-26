@@ -1,9 +1,10 @@
 from aiogram import Bot
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ChatMemberStatus
 from bot.controllers import (
-    advertising_controller, section_controller, subject_controller, test_controller, user_controller
+    advertising_controller, section_controller, subject_controller, test_controller, user_controller, feedback_controller
 )
 from bot.models.user import User
+from bot.models.feedback import StatusChoices as FeedbackStatusChoices
 from bot.keyboards.keyboard_buttons import option
 from bot.keyboards.keyboards import (
     admin_advertisements_keyboard,
@@ -39,6 +40,13 @@ class Pagination:
             data = await advertising_controller.get_pagination(query, offset, limit)
             all_data = await advertising_controller.get_all(query)
             clause = 'advertising'
+        elif self.data_type == 'FEEDBACK':
+            data = await feedback_controller.get_pagination(query, offset, limit)
+            all_data = await feedback_controller.get_all(query)
+            if query['status'] == 'active':
+                clause = 'selfeedback'
+            elif query['status'] == 'seen':
+                clause = 'dofeedback'
         elif self.data_type == 'TEST':
             data = await test_controller.get_pagination(query, offset, limit)
             all_data = await test_controller.get_all(query)
@@ -78,10 +86,10 @@ class Pagination:
 
                 keyboard = admin_advertisements_keyboard(language)
             elif self.data_type == 'FEEDBACK':
-                if query['status'] == 'active':
+                if query['status'] == FeedbackStatusChoices.ACTIVE:
                     text = 'Hali izohlar mavjud emas' if language == option['language'][
                         'uz'] else 'Комментариев пока нет'
-                elif query['status'] == 'seen':
+                elif query['status'] == FeedbackStatusChoices.SEEN:
                     text = 'Hali bajarilayotgan izohlar mavjud emas' \
                         if language == option['language']['uz'] else \
                         "Комментариев пока нет"
@@ -137,7 +145,7 @@ class Pagination:
                 callback_data = f"sadver-{info.id}"
             elif self.data_type == 'FEEDBACK':
                 author = await user_controller.get_one(dict(id=info.user_id))
-                callback_data = f"se_feed-{info.id}" if info.status == 'active' else f"do_feed-{info.id}"
+                callback_data = f"se_feed-{info.id}" if info.status == FeedbackStatusChoices.ACTIVE else f"do_feed-{info.id}"
 
             obj = InlineKeyboardButton(text=f'{i}', callback_data=callback_data)
 

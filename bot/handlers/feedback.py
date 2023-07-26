@@ -47,6 +47,13 @@ async def add_student_instructor_feedback_handler(message: Message, state: FSMCo
 async def requesting_student_instructor_feedback_reason_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
+    if message.text in [option['back']['uz'], option['back']['ru']]:
+        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+
+        await message.answer(error_message)
+        await student_instructor_feedback_handler(message, state)
+        return
+
     if message.text not in [
         option['feedback']['uz']['good'], option['feedback']['uz']['bad'],
         option['feedback']['ru']['good'], option['feedback']['ru']['bad']
@@ -77,7 +84,7 @@ async def creation_student_instructor_feedback_handler(message: Message, state: 
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user['lang'] == option['language']['uz'] else "Отменено"
+        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
 
         await message.answer(error_message)
         await student_instructor_feedback_handler(message, state)
