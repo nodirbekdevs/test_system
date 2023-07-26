@@ -15,7 +15,7 @@ from bot.states.user import UserStates
 
 
 @dp.message_handler(
-    IsAdmin(), text=[admin['pages']['uz']['admins'], admin['page']['ru']['admins']], state=UserStates.process
+    IsAdmin(), text=[admin['pages']['uz']['admins'], admin['pages']['ru']['admins']], state=UserStates.process
 )
 async def admin_admins_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
@@ -33,12 +33,12 @@ async def admin_admins_handler(message: Message, state: FSMContext):
 async def all_admins_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    paginated = await Pagination(data_type="ADMINS").paginate(1, 6, dict(status="active"), user.lang)
+    paginated = await Pagination("ADMINS").paginate(1, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
 
     if paginated['status']:
         await AdminStates.all_admins.set()
 
-    await message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
+    await message.answer(text=paginated['message'], reply_markup=paginated['keyboard'])
 
 
 @dp.callback_query_handler(IsAdmin(), lambda query: query.data == "delete", state=AdminStates.all_admins)
@@ -49,7 +49,9 @@ async def back_from_all_products_handler(query: CallbackQuery, state: FSMContext
 
     await AdminStates.process.set()
 
-    await query.message.edit_text(text=message_text, reply_markup=admin_pages_keyboard(user.lang))
+    await query.message.delete()
+
+    await query.message.answer(text=message_text, reply_markup=admin_admins_keyboard(user.lang))
 
 
 @dp.callback_query_handler(
@@ -62,7 +64,7 @@ async def pagination_admins_handler(query: CallbackQuery, state: FSMContext):
 
     page = int(query.data.split("#")[2])
 
-    paginated = await Pagination("ADMINS").paginate(page, 6, dict(status=StatusChoices.ACTIVE), user.lang)
+    paginated = await Pagination("ADMINS").paginate(page, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
 
     await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
 
@@ -84,7 +86,7 @@ async def get_admin_handler(query: CallbackQuery, state: FSMContext):
 async def back_from_get_admin_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    paginated = await Pagination("ADMINS").paginate(1, 6, dict(status=StatusChoices.ACTIVE), user.lang)
+    paginated = await Pagination("ADMINS").paginate(1, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
 
     await AdminStates.all_admins.set()
 
@@ -99,7 +101,7 @@ async def delete_admin_handler(query: CallbackQuery, state: FSMContext):
 
     await user_controller.delete(dict(id=id))
 
-    paginated = await Pagination(data_type="ADMINS").paginate(1, 6, dict(status=StatusChoices.ACTIVE), user.lang)
+    paginated = await Pagination("ADMINS").paginate(1, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
 
     if not paginated['status']:
         await AdminStates.process
@@ -110,7 +112,7 @@ async def delete_admin_handler(query: CallbackQuery, state: FSMContext):
         await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
 
 
-@dp.callback_query_handler(
+@dp.message_handler(
     IsAdmin(), text=[admin['admins']['uz']['add'], admin['admins']['ru']['add']], state=AdminStates.process
 )
 async def add_admin_handler(message: Message, state: FSMContext):
@@ -156,7 +158,7 @@ async def add_admin_handler(message: Message, state: FSMContext):
     if selected_admin:
         message_text = "Yangi admin qo'shildi" if user.lang == option['language']['uz'] else "Добавлен новый админ"
 
-        await selected_admin.update(status=StatusChoices.ACTIVE).apply()
+        await selected_admin.update(type=User.TypeChoices.ADMIN).apply()
 
         await message.answer(message_text, reply_markup=admin_admins_keyboard(user.lang))
         return

@@ -40,6 +40,10 @@ class Pagination:
             data = await advertising_controller.get_pagination(query, offset, limit)
             all_data = await advertising_controller.get_all(query)
             clause = 'advertising'
+        elif self.data_type == 'ADMINS':
+            data = await user_controller.get_pagination(query, offset, limit)
+            all_data = await user_controller.get_all(query)
+            clause = 'admins'
         elif self.data_type == 'FEEDBACK':
             data = await feedback_controller.get_pagination(query, offset, limit)
             all_data = await feedback_controller.get_all(query)
@@ -96,7 +100,7 @@ class Pagination:
 
                 keyboard = instructor_feedback_keyboard(language) if 'author' in query else admin_feedback_keyboard(
                     language)
-            elif self.data_type == 'USER':
+            elif self.data_type in ['USER', 'ADMINS']:
                 text = "Hozircha adminlar topilmadi" \
                     if language == option['language']['uz'] else \
                     "Админы пока не найдены"
@@ -131,9 +135,11 @@ class Pagination:
         for i, info in enumerate(data, start=1):
             callback_data = ""
 
-            if self.data_type == 'SUBJECT':
+            if self.data_type == 'ADMINS':
+                callback_data = f"sadmin_{info.id}"
+            elif self.data_type == 'SUBJECT':
                 callback_data = f"ssubject-{info.id}"
-            if self.data_type == 'SECTION':
+            elif self.data_type == 'SECTION':
                 callback_data = f"ssection-{info.id}"
             elif self.data_type == 'PLACE':
                 callback_data = f"splace-{info.id}"
@@ -155,6 +161,8 @@ class Pagination:
                 keyboard.row(*arr)
                 arr = []
 
+            if self.data_type == 'ADMINS':
+                text += f"<b>{i}.</b>  {info.name} - {info.telegram_id}\n"
             if self.data_type == 'ADVERTISING':
                 text += f"<b>{i}.</b> {info.title}\n"
             if self.data_type == 'TEST':
