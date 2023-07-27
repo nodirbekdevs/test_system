@@ -6,15 +6,18 @@ from bot.db.database import db
 from bot.helpers.config import DB_URL
 
 from bot.handlers import onboarding, register, settings, feedback, main
-from bot.handlers.admin import advertisements, feedback, admins
+from bot.handlers.admin import advertisements, feedback, admins, instructors
 
 from bot.filters import setup
 from bot.middlewares.admin_creation import AdminCreationMiddleware
-from bot.commands.default_commands import set_default_commands
 from bot.middlewares.channel_subscription import ChannelSubscriptionMiddleware
+from bot.middlewares.is_active import IsActive
+
+from bot.commands.default_commands import set_default_commands
 
 dp.setup_middleware(AdminCreationMiddleware(bot=bot))
 # dp.setup_middleware(ChannelSubscriptionMiddleware(bot=bot, channel_id=CHANNEL_ID))
+# dp.setup_middleware(IsActive(bot=bot))
 setup(dp)
 
 

@@ -1,5 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-from bot.helpers.config import IS_SUBSCRIBED
+from bot.helpers.config import IS_SUBSCRIBED, ADMIN
 from bot.keyboards.keyboard_buttons import admin, instructor, student, option
 
 
@@ -166,7 +166,7 @@ def admin_instructors_keyboard(language):
         [KeyboardButton(option['main']['ru'])]
     ]
 
-    buttons = uz_buttons if language == option['languages']['uz'] else ru_buttons
+    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
@@ -201,6 +201,18 @@ def admin_subjects_keyboard(language):
     buttons = uz_buttons if language == option['languages']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+
+
+def one_admin_instructor_keyboard(user_id, user_type: str = ADMIN) -> InlineKeyboardMarkup:
+
+    kw = 'admin' if user_type == ADMIN else 'instructor'
+
+    buttons = [
+        [InlineKeyboardButton(text="Удалить", callback_data=f"delete.{kw}.{user_id}")],
+        [InlineKeyboardButton(text="Назад", callback_data="back")],
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def one_admin_keyboard(id) -> InlineKeyboardMarkup:

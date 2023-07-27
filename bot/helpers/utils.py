@@ -40,10 +40,13 @@ class Pagination:
             data = await advertising_controller.get_pagination(query, offset, limit)
             all_data = await advertising_controller.get_all(query)
             clause = 'advertising'
-        elif self.data_type == 'ADMINS':
+        elif self.data_type in ['ADMINS', 'INSTRUCTORS', 'STUDENTS']:
             data = await user_controller.get_pagination(query, offset, limit)
             all_data = await user_controller.get_all(query)
-            clause = 'admins'
+            if self.data_type == 'ADMINS':
+                clause = 'admins'
+            if self.data_type == 'INSTRUCTORS':
+                clause = 'instructors'
         elif self.data_type == 'FEEDBACK':
             data = await feedback_controller.get_pagination(query, offset, limit)
             all_data = await feedback_controller.get_all(query)
@@ -100,10 +103,7 @@ class Pagination:
 
                 keyboard = instructor_feedback_keyboard(language) if 'author' in query else admin_feedback_keyboard(
                     language)
-            elif self.data_type in ['USER', 'ADMINS']:
-                text = "Hozircha adminlar topilmadi" \
-                    if language == option['language']['uz'] else \
-                    "Админы пока не найдены"
+            elif self.data_type in ['USER', 'ADMINS', 'INSTRUCTORS']:
 
                 if query['type'] == User.TypeChoices.ADMIN:
                     text = "Hozircha adminlar topilmadi" \
@@ -137,6 +137,8 @@ class Pagination:
 
             if self.data_type == 'ADMINS':
                 callback_data = f"sadmin_{info.id}"
+            if self.data_type == 'INSTRUCTORS':
+                callback_data = f"sins_{info.id}"
             elif self.data_type == 'SUBJECT':
                 callback_data = f"ssubject-{info.id}"
             elif self.data_type == 'SECTION':
@@ -161,13 +163,13 @@ class Pagination:
                 keyboard.row(*arr)
                 arr = []
 
-            if self.data_type == 'ADMINS':
+            if self.data_type in ['ADMINS', 'INSTRUCTORS']:
                 text += f"<b>{i}.</b>  {info.name} - {info.telegram_id}\n"
             if self.data_type == 'ADVERTISING':
                 text += f"<b>{i}.</b> {info.title}\n"
             if self.data_type == 'TEST':
                 text += f"<b>{i}.</b> {info.question}\n"
-            elif self.data_type == 'SECTION' or self.data_type == 'SUBJECT' or self.data_type == 'USER':
+            elif self.data_type in ['SECTION', 'SUBJECT']:
                 text += f"<b>{i}.</b> {info.name}\n"
             elif self.data_type == 'FEEDBACK':
                 text += f"<b>{i}.</b> {author.name} - {info.mark}\n"
