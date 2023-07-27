@@ -1,0 +1,80 @@
+{'time':'26/07/2023 11:26:22 PM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'26/07/2023 11:26:24 PM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'26/07/2023 11:26:24 PM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'26/07/2023 11:26:24 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'26/07/2023 11:26:44 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'26/07/2023 11:26:44 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'26/07/2023 11:26:50 PM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'26/07/2023 11:26:51 PM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'26/07/2023 11:26:51 PM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'26/07/2023 11:26:51 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'26/07/2023 11:34:59 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'26/07/2023 11:34:59 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'26/07/2023 11:35:04 PM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'26/07/2023 11:35:06 PM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'26/07/2023 11:35:06 PM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'26/07/2023 11:35:06 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'26/07/2023 11:45:11 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'26/07/2023 11:45:11 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'26/07/2023 11:45:18 PM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'26/07/2023 11:45:20 PM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'26/07/2023 11:45:20 PM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'26/07/2023 11:45:20 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'26/07/2023 11:45:59 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'26/07/2023 11:45:59 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'26/07/2023 11:46:05 PM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'26/07/2023 11:46:06 PM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'26/07/2023 11:46:06 PM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'26/07/2023 11:46:06 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'26/07/2023 11:47:06 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'26/07/2023 11:47:06 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'26/07/2023 11:47:12 PM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'26/07/2023 11:47:13 PM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'26/07/2023 11:47:13 PM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'26/07/2023 11:47:13 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'26/07/2023 11:56:35 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'26/07/2023 11:56:35 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'26/07/2023 11:56:42 PM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'26/07/2023 11:56:44 PM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'26/07/2023 11:56:44 PM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'26/07/2023 11:56:44 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'27/07/2023 11:42:10 AM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'27/07/2023 11:42:12 AM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'27/07/2023 11:42:12 AM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'27/07/2023 11:42:12 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'27/07/2023 11:42:53 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'27/07/2023 11:42:53 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'27/07/2023 11:43:11 AM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'27/07/2023 11:43:12 AM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'27/07/2023 11:43:12 AM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'27/07/2023 11:43:12 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'27/07/2023 11:44:09 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'27/07/2023 11:44:09 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'27/07/2023 11:44:13 AM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'27/07/2023 11:44:15 AM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'27/07/2023 11:44:15 AM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'27/07/2023 11:44:15 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'27/07/2023 11:47:21 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'27/07/2023 11:47:21 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'27/07/2023 11:47:26 AM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'27/07/2023 11:47:28 AM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'27/07/2023 11:47:28 AM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'27/07/2023 11:47:28 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'27/07/2023 11:48:13 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'27/07/2023 11:48:13 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'27/07/2023 11:48:18 AM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'27/07/2023 11:48:19 AM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'27/07/2023 11:48:19 AM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'27/07/2023 11:48:19 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'27/07/2023 11:49:48 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'27/07/2023 11:49:48 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'27/07/2023 11:49:54 AM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'27/07/2023 11:49:55 AM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'27/07/2023 11:49:55 AM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'27/07/2023 11:49:55 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'27/07/2023 11:50:29 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'27/07/2023 11:50:29 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'27/07/2023 11:50:33 AM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'27/07/2023 11:50:34 AM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'27/07/2023 11:50:34 AM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'27/07/2023 11:50:34 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
