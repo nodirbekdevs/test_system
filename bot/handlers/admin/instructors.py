@@ -89,11 +89,15 @@ async def get_instructors_handler(query: CallbackQuery, state: FSMContext):
 async def back_from_get_instructor_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    paginated = await Pagination("INSTRUCTOR").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
+    paginated = await Pagination("INSTRUCTORS").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
 
-    await InstructorStates.all_instructors.set()
-
-    await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
+    if paginated['status']:
+        await InstructorStates.all_instructors.set()
+        await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
+    else:
+        await InstructorStates.process.set()
+        await query.message.delete()
+        await query.message.answer(text=paginated['message'], reply_markup=paginated['keyboard'])
 
 
 @dp.callback_query_handler(IsAdmin(), lambda query: query.data.startswith("delete.instructor."), state=InstructorStates.one_instructor)
@@ -154,12 +158,12 @@ async def creating_instructor_handler(message: Message, state: FSMContext):
         )
         return
 
-    selected_admin = await user_controller.get_one(dict(telegram_id=int(message.text)))
+    selected_instructor = await user_controller.get_one(dict(telegram_id=int(message.text)))
 
-    if selected_admin:
+    if selected_instructor:
         message_text = "Yangi instructor qo'shildi" if user.lang == option['language']['uz'] else "Добавлен новый инструктор"
 
-        await selected_admin.update(type=User.TypeChoices.ADMIN).apply()
+        await selected_instructor.update(type=User.TypeChoices.INSTRUCTOR).apply()
         await InstructorStates.process.set()
         await message.answer(message_text, reply_markup=admin_instructors_keyboard(user.lang))
         return
