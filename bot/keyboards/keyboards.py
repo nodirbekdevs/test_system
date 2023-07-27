@@ -215,6 +215,24 @@ def one_admin_instructor_keyboard(user_id, user_type: str = ADMIN) -> InlineKeyb
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def one_subject_keyboard(subject_id, language, user_type: str = ADMIN) -> InlineKeyboardMarkup:
+    kw, back = '', ''
+
+    if language == option['language']['uz']:
+        kw = "O'chirish"
+        back = option['back']['uz']
+    if language == option['language']['ru']:
+        kw = "Удалить"
+        back = option['back']['ru']
+
+    buttons = [
+        [InlineKeyboardButton(text=kw, callback_data=f"delete.subject.{subject_id}")],
+        [InlineKeyboardButton(text=back, callback_data="back")],
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 def one_admin_keyboard(id) -> InlineKeyboardMarkup:
     buttons = [
         [InlineKeyboardButton(text="Удалить", callback_data=f"delete.admin.{id}")],

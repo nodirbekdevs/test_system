@@ -307,7 +307,7 @@ async def section_creation_handler(message: Message, state: FSMContext):
 
     subject, name, description = data.get('section_subject'), data.get('section_name'), data.get('section_description')
 
-    subject_data = dict(name_uz=name) if user.lang == option['language']['uz'] else dict(name_ru=name)
+    subject_data = dict(name_uz=subject) if user.lang == option['language']['uz'] else dict(name_ru=subject)
 
     subject = await subject_controller.get_one(subject_data)
 

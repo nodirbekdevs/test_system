@@ -78,3 +78,5 @@
 {'time':'27/07/2023 11:50:34 AM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
 {'time':'27/07/2023 11:50:34 AM', 'name': 'global', 'level': 'INFO', 'message': '20'}
 {'time':'27/07/2023 11:50:34 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'27/07/2023 02:05:15 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'27/07/2023 02:05:15 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}

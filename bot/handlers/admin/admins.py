@@ -104,7 +104,7 @@ async def delete_admin_handler(query: CallbackQuery, state: FSMContext):
     paginated = await Pagination("ADMINS").paginate(1, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
 
     if not paginated['status']:
-        await AdminStates.process
+        await AdminStates.process.set()
         await query.message.delete()
         await query.message.answer(text=paginated['message'], reply_markup=paginated['keyboard'])
     elif paginated['status']:
@@ -145,8 +145,6 @@ async def add_admin_handler(message: Message, state: FSMContext):
         await message.answer(message_text)
         return
 
-    await AdminStates.process.set()
-
     if message.from_user.id == int(message.text):
         await message.answer(
             text="Отправьте telegrma id другого админа. Это telegram id пренадлежит вам."
@@ -182,6 +180,8 @@ async def add_admin_handler(message: Message, state: FSMContext):
         lang=admin_lang,
         type=User.TypeChoices.ADMIN
     )
+
+    await AdminStates.process.set()
 
     await user_controller.make(admin_data)
 

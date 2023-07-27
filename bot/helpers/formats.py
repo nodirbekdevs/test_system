@@ -12,6 +12,33 @@ def introduction_format(name):
     return message
 
 
+def subject_format(data, language, is_editing=False):
+    message, type = "", ""
+
+    if language == option['language']['uz']:
+        message += "Fan ma'lumotlari: \n"
+        message += f"Тomi - {data['name']}\n"
+        message += f"Tavsifi - {data['description']}\n"
+    elif language == option['language']['ru']:
+        message += "Информация о предмете: \n"
+        message += f"Название - {data['name_ru']}\n"
+        message += f"Описание - {data['description']}\n"
+
+    if is_editing:
+        message += f"\n\nNimani o'zgartirmoqchisiz ?" \
+            if language == option['language']['uz'] else \
+            f"\n\nЧто вы хотите изменить ?"
+    else:
+        if language == option['language']['uz']:
+            message += f"Holati - {data['status']}\n"
+            message += f"Qo'shilgan vaqti - {data['created_at'].strftime('%d.%m.%Y %H:%M')}"
+        elif language == option['language']['ru']:
+            message += f"Статус - {data['status']}\n"
+            message += f"Добавлено время - {data['created_at'].strftime('%d.%m.%Y %H:%M')}"
+
+    return message
+
+
 def user_format(data, language, is_editing=False):
     message, type = "", ""
 
