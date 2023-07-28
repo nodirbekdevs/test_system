@@ -23,7 +23,7 @@ class Pagination:
     def __init__(self, data_type: str):
         self.data_type = data_type
 
-    async def paginate(self, page: int, limit: int, query: dict, language: str, form: str = '') -> dict:
+    async def paginate(self, page: int, limit: int, query: dict, language: str, order_by_columns, form: str = '') -> dict:
         text, clause, data, all_data, keyboard, arr, author, status = "", "", [], [], InlineKeyboardMarkup(), [], {}, True
 
         offset = limit * (page - 1)
@@ -55,7 +55,7 @@ class Pagination:
             elif query['status'] == 'seen':
                 clause = 'dofeedback'
         elif self.data_type == 'TEST':
-            data = await test_controller.get_pagination(query, offset, limit)
+            data = await test_controller.get_pagination(query, offset, limit, order_by_columns)
             all_data = await test_controller.get_all(query)
             clause = 'tests'
         elif self.data_type == 'USER':

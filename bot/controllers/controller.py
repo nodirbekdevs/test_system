@@ -1,5 +1,6 @@
 from typing import List
 from bot.db.database import db
+from sqlalchemy import desc
 from bot.helpers.config import GET, POST, PUT, DELETE, COUNT, SINGLE, ALL
 
 
@@ -7,7 +8,15 @@ class Controller:
     def __init__(self, model):
         self.model = model
 
-    async def process(self, method: str, query: dict, count: str = '', is_paginating: bool = False, data=None):
+    async def process(
+            self,
+            method: str,
+            query: dict,
+            count: str = '',
+            is_paginating: bool = False,
+            data=None,
+            order_by_columns=''
+    ):
         result = ''
 
         if method == GET:
@@ -27,6 +36,12 @@ class Controller:
 
                     if is_paginating:
                         result = result.limit(data['limit']).offset(data['offset'])
+
+            if method == GET and len(order_by_columns) > 0:
+                for order in order_by_columns:
+                    order_by_column = getattr(self.model, order, None)
+                    if order_by_column is not None:
+                        result = result.order_by(order_by_column)
 
         if method in [DELETE, PUT]:
             result = await result.gino.status()
@@ -52,7 +67,7 @@ class Controller:
         except Exception as error:
             print(error)
 
-    async def get_pagination(self, query: dict, offset: int, limit: int) -> List:
+    async def get_pagination(self, query: dict, offset: int, limit: int, order_by_columns='') -> List:
         try:
             return await self.process(
                 method=GET, query=query, count=ALL, is_paginating=True, data=dict(offset=offset, limit=limit)

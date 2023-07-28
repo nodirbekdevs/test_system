@@ -39,6 +39,49 @@ def subject_format(data, language, is_editing=False):
     return message
 
 
+def test_format(data, language, is_editing=False):
+    message = ""
+
+    if language == option['language']['uz']:
+        message += "Test ma'lumotlari: \n"
+        message += f"Egasi - {data['owner']}\n"
+        message += f"Fan - {data['subject']}\n"
+        message += f"Bo'lim - {data['section']}\n"
+        message += f"Savol - {data['question']}\n"
+
+        message += f"\nVariantlar\n"
+        for index, variant in enumerate(data['variants'], start=1):
+            message += f"{index}. {variant}\n"
+
+        message += f"To'g'ri javob - {data['correct_answer']}"
+    elif language == option['language']['ru']:
+        message += "Информация о тесте: \n"
+        message += f"Владелец - {data['owner']}\n"
+        message += f"Предмет - {data['subject']}"
+        message += f"Секция - {data['section']}"
+        message += f"Вопрос - {data['question']}"
+
+        message += f"\nВарианты\n"
+        for index, variant in enumerate(data['variants'], start=1):
+            message += f"{index}. {variant}\n"
+
+        message += f"Правильный ответ - {data['correct_answer']}"
+
+    if is_editing:
+        message += f"\n\nTugaganini tasdiqlaysizmi ?" \
+            if language == option['language']['uz'] else \
+            f"\n\nМожете ли вы подтвердить, что это сделано ?"
+    else:
+        if language == option['language']['uz']:
+            message += f"\nHolati - {data['status']}\n"
+            message += f"Qo'shilgan vaqti - {data['created_at'].strftime('%d.%m.%Y %H:%M')}"
+        elif language == option['language']['ru']:
+            message += f"\nСтатус - {data['status']}\n"
+            message += f"Добавлено время - {data['created_at'].strftime('%d.%m.%Y %H:%M')}"
+
+    return message
+
+
 def user_format(data, language, is_editing=False):
     message, type = "", ""
 

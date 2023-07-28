@@ -108,6 +108,10 @@ option['send'] = dict()
 option['send']['uz'] = '🔙 Yuborish'
 option['send']['ru'] = '🔙 Отправить'
 
+option['next'] = dict()
+option['next']['uz'] = 'Keyingisi'
+option['next']['ru'] = 'Далее'
+
 option['confirmation'] = dict()
 option['confirmation']['uz'] = "Tasdiqlash"
 option['confirmation']['ru'] = "Подтверждение"

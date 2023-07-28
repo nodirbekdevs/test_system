@@ -317,6 +317,22 @@ def confirmation_keyboard(language):
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
 
 
+def next_keyboard(language):
+    uz_buttons = [
+        [KeyboardButton(option['next']['uz'])],
+        [KeyboardButton(option['back']['uz'])]
+    ]
+
+    ru_buttons = [
+        [KeyboardButton(option['next']['ru'])],
+        [KeyboardButton(option['back']['ru'])]
+    ]
+
+    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
+
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+
+
 def back_keyboard(language):
     word = option['back']['uz'] if language == option['language']['uz'] else option['back']['ru']
 
@@ -449,6 +465,24 @@ def one_section_keyboard(section_id, language):
 
     buttons = [
         [InlineKeyboardButton(text=word, callback_data=f"delete.section.{section_id}")],
+        [InlineKeyboardButton(text=back, callback_data="back")]
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def one_test_keyboard(section_id, language):
+    word, back = "", ""
+
+    if language == option['language']['uz']:
+        word = "O'chirish"
+        back = option['back']['uz']
+    elif language == option['language']['ru']:
+        word = "Удалить"
+        back = option['back']['ru']
+
+    buttons = [
+        [InlineKeyboardButton(text=word, callback_data=f"delete.test.{section_id}")],
         [InlineKeyboardButton(text=back, callback_data="back")]
     ]
 
