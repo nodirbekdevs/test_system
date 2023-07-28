@@ -169,8 +169,10 @@ class Pagination:
                 text += f"<b>{i}.</b> {info.title}\n"
             if self.data_type == 'TEST':
                 text += f"<b>{i}.</b> {info.question}\n"
-            elif self.data_type in ['SECTION', 'SUBJECT']:
+            elif self.data_type == 'SECTION':
                 text += f"<b>{i}.</b> {info.name}\n"
+            elif self.data_type == 'SUBJECT':
+                text += f"<b>{i}.</b> {info.name_uz if language == option['language']['uz'] else info.name_ru}\n"
             elif self.data_type == 'FEEDBACK':
                 text += f"<b>{i}.</b> {author.name} - {info.mark}\n"
 

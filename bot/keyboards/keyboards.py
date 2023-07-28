@@ -198,7 +198,7 @@ def admin_subjects_keyboard(language):
         [KeyboardButton(option['main']['ru'])]
     ]
 
-    buttons = uz_buttons if language == option['languages']['uz'] else ru_buttons
+    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 

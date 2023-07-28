@@ -19,6 +19,7 @@ class Test(db.Model):
     correct_answer = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(255), default=StatusChoices.ACTIVE)
     is_testing = db.Column(db.Boolean, default=False)
+    lang = db.Column(db.String(255), nullable=False)
     updated_at = db.Column(db.DateTime(), default=db.func.now(), onupdate=db.func.now())
     created_at = db.Column(db.DateTime(), default=db.func.now())
 

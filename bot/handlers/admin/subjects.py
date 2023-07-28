@@ -3,9 +3,8 @@ from aiogram.types import CallbackQuery, Message
 
 from deep_translator import GoogleTranslator
 
-from bot.loader import dp, bot
+from bot.loader import dp
 from bot.filters.is_admin import IsAdmin
-from bot.helpers.config import INSTRUCTOR
 from bot.controllers import user_controller, subject_controller
 from bot.models.subject import StatusChoices
 from bot.keyboards.keyboards import admin_subjects_keyboard, one_subject_keyboard, back_keyboard, confirmation_keyboard
@@ -79,11 +78,18 @@ async def get_subject_handler(query: CallbackQuery, state: FSMContext):
 
     selected_subject = await subject_controller.get_one(dict(id=id))
 
+    data = dict(
+        name=selected_subject.name_uz if user.lang == option['language']['uz'] else selected_subject.name_ru,
+        description=selected_subject.description,
+        status=selected_subject.status,
+        created_at=selected_subject.created_at
+    )
+
     await SubjectStates.one_subject.set()
 
     await query.message.edit_text(
-        text=subject_format(selected_subject, user.lang),
-        reply_markup=one_subject_keyboard(id, INSTRUCTOR)
+        text=subject_format(data, user.lang),
+        reply_markup=one_subject_keyboard(id, user.lang)
     )
 
 
@@ -157,12 +163,14 @@ async def requesting_description_handler(message: Message, state: FSMContext):
     async with state.proxy() as data:
         data['subject_name'] = message.text
 
+    await SubjectStates.description.set()
+
     message_text = "Fanni tavsifini yuboring" if user.lang == option['language']['uz'] else "Отправьте описание предмета"
 
     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
 
 
-@dp.message_handler(IsAdmin(), state=SubjectStates.name)
+@dp.message_handler(IsAdmin(), state=SubjectStates.description)
 async def checking_creation_subject_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
@@ -189,7 +197,7 @@ async def checking_creation_subject_handler(message: Message, state: FSMContext)
 
     await SubjectStates.checking.set()
 
-    await message.answer(subject_format(subject_data, user, True), reply_markup=confirmation_keyboard(user.lang))
+    await message.answer(subject_format(subject_data, user.lang, True), reply_markup=confirmation_keyboard(user.lang))
 
 
 @dp.message_handler(IsAdmin(), state=SubjectStates.checking)
@@ -214,7 +222,6 @@ async def subject_creation_handler(message: Message, state: FSMContext):
 
         await message.answer(
             text=error_message,
-            reply_markup=admin_subjects_keyboard(user.lang)
         )
         return
 
@@ -226,21 +233,26 @@ async def subject_creation_handler(message: Message, state: FSMContext):
 
     data = await state.get_data()
 
-    translator_language = "uz" if user.lang == option['language']['uz'] else 'ru'
+    translator_language = "ru" if user.lang == option['language']['uz'] else 'uz'
 
-    translated_subject_name = GoogleTranslator(target=translator_language).translate(data['subject_name'],)
+    translated_subject_name = GoogleTranslator(target=translator_language).translate(data['subject_name']).capitalize()
+    translated_subject_description = GoogleTranslator(target=translator_language).translate(data['subject_description']).capitalize()
 
-    name_uz, name_ru = '', ''
+    name_uz, name_ru, description_uz, description_ru = '', '', '', ''
 
     if translator_language == 'uz':
         name_uz = data['subject_name']
         name_ru = translated_subject_name
+        description_uz = data['subject_description']
+        description_ru = translated_subject_description
     elif translator_language == 'ru':
         name_uz = translated_subject_name
         name_ru = data['subject_name']
+        description_uz = translated_subject_description
+        description_ru = data['subject_description']
 
     await subject_controller.make(
-        dict(name_uz=name_uz, name_ru=name_ru, description=data['subject_description'])
+        dict(name_uz=name_uz, name_ru=name_ru, description_uz=description_uz, description_ru=description_ru)
     )
 
     await SubjectStates.process.set()
