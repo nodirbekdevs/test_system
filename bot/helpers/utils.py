@@ -6,16 +6,13 @@ from bot.controllers import (
 from bot.models.user import User
 from bot.models.feedback import StatusChoices as FeedbackStatusChoices
 from bot.keyboards.keyboard_buttons import option
+from bot.helpers.config import INSTRUCTOR, SUBJECT, TEST, ADMIN, SECTION, STUDENT
 from bot.keyboards.keyboards import (
     admin_advertisements_keyboard,
-    admin_admins_keyboard,
-    admin_subjects_keyboard,
-    admin_students_keyboard,
+    admin_keyboard,
     admin_feedback_keyboard,
-    admin_instructors_keyboard,
-    instructor_sections_keyboard,
-    instructor_tests_keyboard,
-    instructor_feedback_keyboard
+    instructor_keyboard,
+    student_instructor_feedback_keyboard
 )
 
 
@@ -69,19 +66,19 @@ class Pagination:
                     if language == option['language']['uz'] else \
                     "Ни одна предмет еще не добавлена"
 
-                keyboard = admin_subjects_keyboard(language)
+                keyboard = admin_keyboard(SUBJECT, language)
             elif self.data_type == 'SECTION':
                 text = "Hozircha bu tip uchun ismlar qo'shilmagan" \
                     if language == option['language']['uz'] else \
                     "Имена для этого типа пока не добавлены"
 
-                keyboard = instructor_sections_keyboard(language)
+                keyboard = instructor_keyboard(SECTION, language)
             elif self.data_type == 'TEST':
                 text = "Hozircha bu tip uchun testlar qo'shilmagan" \
                     if language == option['language']['uz'] else \
                     "Тесты для этого типа пока не добавлены"
 
-                keyboard = instructor_tests_keyboard(language)
+                keyboard = instructor_keyboard(TEST, language)
             elif self.data_type == 'PLACE':
                 text = "Hozircha bu tip uchun tabriklar qo'shilmagan" \
                     if language == option['language']['uz'] else \
@@ -101,8 +98,9 @@ class Pagination:
                         if language == option['language']['uz'] else \
                         "Комментариев пока нет"
 
-                keyboard = instructor_feedback_keyboard(language) if 'author' in query else admin_feedback_keyboard(
-                    language)
+                keyboard = student_instructor_feedback_keyboard(language) \
+                    if 'author' in query else \
+                    admin_feedback_keyboard(language)
             elif self.data_type in ['USER', 'ADMINS', 'INSTRUCTORS']:
 
                 if query['type'] == User.TypeChoices.ADMIN:
@@ -110,19 +108,19 @@ class Pagination:
                         if language == option['language']['uz'] else \
                         "Админы пока не найдены"
 
-                    keyboard = admin_admins_keyboard(language)
+                    keyboard = admin_keyboard(ADMIN, language)
                 elif query['type'] == User.TypeChoices.INSTRUCTOR:
                     text = "Hozircha instruktorlar topilmadi" \
                         if language == option['language']['uz'] else \
                         "Инструкторы пока не найдены"
 
-                    keyboard = admin_instructors_keyboard(language)
+                    keyboard = admin_keyboard(INSTRUCTOR, language)
                 elif query['type'] == User.TypeChoices.STUDENT:
                     text = "Hozircha studentlar topilmadi" \
                         if language == option['language']['uz'] else \
                         "Студенты пока не найдены"
 
-                    keyboard = admin_students_keyboard(language)
+                    keyboard = admin_keyboard(STUDENT, language)
 
             status = False
 

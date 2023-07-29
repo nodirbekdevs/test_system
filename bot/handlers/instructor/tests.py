@@ -3,7 +3,8 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, Message, ContentTypes
 
 from deep_translator import GoogleTranslator
-from os.path import join, abspath, dirname
+from os import mkdir
+from os.path import join, abspath, dirname, exists
 from asyncio import to_thread
 
 from bot.loader import dp
