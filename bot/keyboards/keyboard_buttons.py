@@ -21,16 +21,6 @@ admin['pages']['ru']['subjects'] = "Предметы"
 admin['pages']['ru']['advertisements'] = "Реклама"
 
 
-admin['settings'] = dict()
-admin['settings']['uz'] = dict()
-admin['settings']['uz']['name'] = "Ismni o'zgartirish"
-admin['settings']['uz']['number'] = "Teflon raqamni o'zgartirish"
-admin['settings']['uz']['lang'] = "Platformadagi tilni o'zgartirish"
-admin['settings']['ru'] = dict()
-admin['settings']['ru']['name'] = "Изменение имени"
-admin['settings']['ru']['number'] = "Изменить номер телефона"
-admin['settings']['ru']['lang'] = "Измените язык на платформе"
-
 admin['admins'] = dict()
 admin['admins']['uz'] = dict()
 admin['admins']['uz']['all'] = "Barcha adminlar"
@@ -171,16 +161,6 @@ instructor['pages']['ru']['sections'] = "Тесты"
 instructor['pages']['ru']['tests'] = "Тесты"
 instructor['pages']['ru']['feedback'] = "Комментарии"
 
-instructor['settings'] = dict()
-instructor['settings']['uz'] = dict()
-instructor['settings']['uz']['name'] = "Ismni o'zgartirish"
-instructor['settings']['uz']['number'] = "Telefon raqamni o'zgartirish"
-instructor['settings']['uz']['lang'] = "Platformadagi tilni o'zgartirish"
-instructor['settings']['ru'] = dict()
-instructor['settings']['ru']['name'] = "Изменение имени"
-instructor['settings']['ru']['number'] = "Изменить номер телефона"
-instructor['settings']['ru']['lang'] = "Измените язык на платформе"
-
 instructor['sections'] = dict()
 instructor['sections']['uz'] = dict()
 instructor['sections']['uz']['all'] = "Barcha bo'limlar"
@@ -196,15 +176,6 @@ instructor['tests']['uz']['add'] = "Test qo'shish"
 instructor['tests']['ru'] = dict()
 instructor['tests']['ru']['all'] = "Все тесты"
 instructor['tests']['ru']['add'] = "Добавить тест"
-
-instructor['feedback'] = dict()
-instructor['feedback']['uz'] = dict()
-instructor['feedback']['uz']['my_feedback'] = '📃 Mening izohlarim'
-instructor['feedback']['uz']['add'] = '📝 Izoh qoldirish'
-instructor['feedback']['ru'] = dict()
-instructor['feedback']['ru']['my_feedback'] = '📃 Мои коментарии'
-instructor['feedback']['ru']['add'] = '📝 Оставить коментария'
-
 
 "----- End of instructor keyboards -----"
 
@@ -223,22 +194,24 @@ student['pages']['ru']['settings'] = "Настройки"
 student['pages']['ru']['tests'] = "Тесты"
 student['pages']['ru']['feedback'] = "Комментарии"
 
-student['settings'] = dict()
-student['settings']['uz'] = dict()
-student['settings']['uz']['name'] = "Ismni o'zgartirish"
-student['settings']['uz']['number'] = "Telefon raqamni o'zgartirish"
-student['settings']['uz']['lang'] = "Platformadagi tilni o'zgartirish"
-student['settings']['ru'] = dict()
-student['settings']['ru']['name'] = "Изменение имени"
-student['settings']['ru']['number'] = "Изменить номер телефона"
-student['settings']['ru']['lang'] = "Измените язык на платформе"
-
-student['feedback'] = dict()
-student['feedback']['uz'] = dict()
-student['feedback']['uz']['my_feedback'] = '📃 Mening izohlarim'
-student['feedback']['uz']['add'] = '📝 Izoh qoldirish'
-student['feedback']['ru'] = dict()
-student['feedback']['ru']['my_feedback'] = '📃 Мои коментарии'
-student['feedback']['ru']['add'] = '📝 Оставить коментария'
-
 "----- End of student keyboards -----"
+
+all = dict()
+all['settings'] = dict()
+all['settings']['uz'] = dict()
+all['settings']['uz']['name'] = "Ismni o'zgartirish"
+all['settings']['uz']['number'] = "Teflon raqamni o'zgartirish"
+all['settings']['uz']['lang'] = "Platformadagi tilni o'zgartirish"
+all['settings']['ru'] = dict()
+all['settings']['ru']['name'] = "Изменение имени"
+all['settings']['ru']['number'] = "Изменить номер телефона"
+all['settings']['ru']['lang'] = "Измените язык на платформе"
+
+
+all['feedback'] = dict()
+all['feedback']['uz'] = dict()
+all['feedback']['uz']['my_feedback'] = '📃 Mening izohlarim'
+all['feedback']['uz']['add'] = '📝 Izoh qoldirish'
+all['feedback']['ru'] = dict()
+all['feedback']['ru']['my_feedback'] = '📃 Мои коментарии'
+all['feedback']['ru']['add'] = '📝 Оставить коментария'

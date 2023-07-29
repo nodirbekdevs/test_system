@@ -9,7 +9,6 @@ from bot.keyboards.keyboard_buttons import option
 from bot.keyboards.keyboards import (
     instructor_pages_keyboard, student_pages_keyboard, language_keyboard, send_contact_keyboard, type_keyboard
 )
-from bot.states.admin import AdminStates
 from bot.states.user import UserStates
 
 

@@ -7,7 +7,7 @@ from os.path import join, exists, dirname, abspath
 import aiofiles
 from asyncio import to_thread
 
-from bot.loader import dp, bot
+from bot.loader import dp
 from bot.controllers import user_controller, advertising_controller
 from bot.models.advertising import StatusChoices
 from bot.filters.is_admin import IsAdmin
@@ -17,8 +17,8 @@ from bot.keyboards.keyboard_buttons import admin, option
 from bot.keyboards.keyboards import (
     admin_advertisements_keyboard,
     one_advertising_keyboard,
+    confirmation_advertising_keyboard,
     back_keyboard,
-    confirmation_advertising_keyboard
 )
 from bot.states.advertising import AdvertisingStates
 from bot.states.user import UserStates
@@ -29,7 +29,7 @@ from bot.states.user import UserStates
     text=[admin['pages']['uz']['advertisements'], admin['pages']['ru']['advertisements']],
     state=UserStates.process
 )
-async def advertising_handler(message: Message, state: FSMContext):
+async def admin_advertisements_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
     await AdvertisingStates.process.set()
 
@@ -60,10 +60,10 @@ async def number_of_advertisements_handler(message: Message, state: FSMContext):
     text=[admin['advertisements']['uz']['all'], admin['advertisements']['ru']['all']],
     state=AdvertisingStates.process
 )
-async def get_all_advertisements_handler(message: Message, state: FSMContext):
+async def all_advertisements_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    await AdvertisingStates.pagination.set()
+    await AdvertisingStates.all_advertisements.set()
 
     paginated = await Pagination('ADVERTISING').paginate(1, 6, dict(status=StatusChoices.ACTIVE), user.lang)
 
@@ -76,32 +76,32 @@ async def get_all_advertisements_handler(message: Message, state: FSMContext):
 @dp.callback_query_handler(
     IsAdmin(),
     lambda query: query.data.startswith("left#advertising#") or query.data.startswith("right#advertising#"),
-    state=AdvertisingStates.pagination
+    state=AdvertisingStates.all_advertisements
 )
 async def paginate_advertisements_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
-    paginated = await Pagination('ADVERTISING').paginate(int(query.data.split('#')[2]), 6, dict(status='active'), user.lang)
+    page = int(query.data.split('#')[2])
+    paginated = await Pagination('ADVERTISING').paginate(page, 6, dict(status=StatusChoices.ACTIVE), user.lang)
     await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])
 
 
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data == 'delete', state=AdvertisingStates.pagination)
+@dp.callback_query_handler(IsAdmin(), lambda query: query.data == 'delete', state=AdvertisingStates.all_advertisements)
 async def back_from_advertisements_pagination_handler(query: CallbackQuery, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
     await query.message.delete()
-    await AdvertisingStates.process.set()
-    await query.message.answer("Reklama bo'limi", reply_markup=admin_advertisements_keyboard(user.lang))
+    await admin_advertisements_handler(query.message, state)
 
 
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data.startswith("sadver-"),
-                           state=AdvertisingStates.pagination)
-async def single_advertising_handler(query: CallbackQuery, state: FSMContext):
+@dp.callback_query_handler(
+    IsAdmin(), lambda query: query.data.startswith("sadver-"), state=AdvertisingStates.all_advertisements
+)
+async def one_advertising_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    id = query.data.split("-")[1]
+    id = int(query.data.split("-")[1])
 
-    advertising = await advertising_controller.get_one(dict(id=int(id)))
+    advertising = await advertising_controller.get_one(dict(id=id))
 
-    await AdvertisingStates.single.set()
+    await AdvertisingStates.one_advertising.set()
 
     await query.message.delete()
 
@@ -112,24 +112,17 @@ async def single_advertising_handler(query: CallbackQuery, state: FSMContext):
             reply_markup=one_advertising_keyboard(id, user.lang)
         )
 
-    # with open(advertising['file'], "rb") as file:
-    #     await query.message.answer_photo(
-    #         file,
-    #         caption=advertising_format(advertising),
-    #         reply_markup=one_advertising_keyboard(id)
-    #     )
 
-
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data == 'back', state=AdvertisingStates.single)
-async def back_from_single_advertising_handler(query: CallbackQuery, state: FSMContext):
+@dp.callback_query_handler(IsAdmin(), lambda query: query.data == 'back', state=AdvertisingStates.one_advertising)
+async def back_from_one_advertising_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    await AdvertisingStates.pagination.set()
-    paginated = await Pagination('ADVERTISING').paginate(1, 6, dict(status='active'), user.lang)
+    await AdvertisingStates.all_advertisements.set()
+    paginated = await Pagination('ADVERTISING').paginate(1, 6, dict(status=StatusChoices.ACTIVE), user.lang)
 
     await query.message.delete()
 
-    await AdvertisingStates.pagination.set()
+    await AdvertisingStates.all_advertisements.set()
 
     if not paginated['status']:
         AdvertisingStates.process.set()
@@ -137,21 +130,23 @@ async def back_from_single_advertising_handler(query: CallbackQuery, state: FSMC
     await query.message.answer(paginated['message'], reply_markup=paginated['keyboard'])
 
 
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data.startswith("send_ad."), state=AdvertisingStates.single)
+@dp.callback_query_handler(
+    IsAdmin(), lambda query: query.data.startswith("send_ad."), state=AdvertisingStates.one_advertising
+)
 async def send_advertising_to_all_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    id = query.data.split('.')[1]
+    id = int(query.data.split('.')[1])
 
-    advertising = await advertising_controller.get_one(dict(id=int(id)))
+    advertising = await advertising_controller.get_one(dict(id=id))
 
     users = await user_controller.get_all(dict(status=StatusChoices.ACTIVE))
 
     for user in users:
-        with open(advertising.file, 'rb') as image:
-            await bot.send_photo(user.telegram_id, image, advertising_format(advertising, user.lang))
+        async with aiofiles.open(advertising.file, 'rb') as image:
+            await dp.bot.send_photo(user.telegram_id, image, advertising_format(advertising, user.lang))
 
-    await AdvertisingStates.pagination.set()
+    await AdvertisingStates.all_advertisements.set()
 
     paginated = await Pagination('ADVERTISING').paginate(1, 6, dict(status=StatusChoices.ACTIVE), user.lang)
 
@@ -161,18 +156,23 @@ async def send_advertising_to_all_handler(query: CallbackQuery, state: FSMContex
         await AdvertisingStates.process.set()
 
     await query.message.answer(paginated['message'], reply_markup=paginated['keyboard'])
-    await query.message.answer('Reklama barchaga yuborildi')
+
+    message_text = "Reklama barchaga yuborildi" if user.lang == option['language']['uz'] else "Объявление отправлено всем"
+
+    await query.message.answer(message_text)
 
 
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data.startswith("delete_ad."), state=AdvertisingStates.single)
+@dp.callback_query_handler(
+    IsAdmin(), lambda query: query.data.startswith("delete_ad."), state=AdvertisingStates.one_advertising
+)
 async def delete_advertising_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    id = query.data.split('.')[1]
+    id = int(query.data.split('.')[1])
 
-    await advertising_controller.delete(dict(id=int(id)))
+    await advertising_controller.delete(dict(id=id))
 
-    await AdvertisingStates.pagination.set()
+    await AdvertisingStates.all_advertisements.set()
 
     paginated = await Pagination('ADVERTISING').paginate(1, 6, dict(status=StatusChoices.ACTIVE), user.lang)
 
@@ -181,7 +181,10 @@ async def delete_advertising_handler(query: CallbackQuery, state: FSMContext):
     if not paginated['status']:
         await AdvertisingStates.process.set()
 
-    await query.message.answer("Reklama o'chirildi")
+    message_text = "Reklama o'chirildi" if user.lang == option['language']['uz'] else "Объявление удалено"
+
+    await query.message.answer(message_text)
+
     await query.message.answer(paginated['message'], reply_markup=paginated['keyboard'])
 
 
@@ -193,8 +196,18 @@ async def delete_advertising_handler(query: CallbackQuery, state: FSMContext):
 async def requesting_advertising_image_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
     await AdvertisingStates.image.set()
-    await message.answer("Reklama joylashga hush kelibsiz")
-    await message.answer("Reklamani rasmini jo'nating", reply_markup=back_keyboard(user.lang))
+
+    message_1, message_2 = '', ''
+
+    if user.lang == option['language']['uz']:
+        message_1 = "Reklama joylashga hush kelibsiz"
+        message_2 = "Reklamani rasmini jo'nating"
+    elif user.lang == option['language']['uz']:
+        message_1 = "Вы можете разместить объявление"
+        message_2 = "Отправьте фото объявления"
+
+    await message.answer(message_1)
+    await message.answer(message_2, reply_markup=back_keyboard(user.lang))
 
 
 @dp.message_handler(IsAdmin(), content_types=ContentTypes.ANY, state=AdvertisingStates.image)
@@ -203,7 +216,8 @@ async def requesting_advertising_title_handler(message: Message, state: FSMConte
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         await AdvertisingStates.process.set()
-        await message.answer("Reklama muvaffaqiyatli yakunlanmadi", reply_markup=admin_advertisements_keyboard(user.lang))
+        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
     path = join(dirname(abspath(__file__)), '..', '..', '..', 'test_app', 'static', 'media', 'advertising_photos')
@@ -216,7 +230,11 @@ async def requesting_advertising_title_handler(message: Message, state: FSMConte
     async with state.proxy() as data:
         data['advertising_image'] = message.photo[0].file_id
 
-    await message.answer("Reklamaning sarlavhasini kiriting", reply_markup=back_keyboard(user.lang))
+    message_text = "Reklamaning sarlavhasini kiriting" \
+        if user.lang == option['language']['uz'] else \
+        "Введите название объявления"
+
+    await message.answer(message_text, reply_markup=back_keyboard(user.lang))
 
 
 @dp.message_handler(IsAdmin(), state=AdvertisingStates.title)
@@ -225,14 +243,19 @@ async def requesting_advertising_description_handler(message: Message, state: FS
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         await AdvertisingStates.process.set()
-        await message.answer("Reklama muvaffaqiyatli yakunlanmadi", reply_markup=admin_advertisements_keyboard(user.lang))
+        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
     async with state.proxy() as data:
         data['advertising_title'] = message.text
 
+    message_text = "Reklamaning tavsifini kiriting" \
+        if user.lang == option['language']['uz'] else \
+        "Введите описание объявления"
+
     await AdvertisingStates.description.set()
-    await message.answer("Reklama tavsifini kiriting", reply_markup=back_keyboard(user.lang))
+    await message.answer(message_text, reply_markup=back_keyboard(user.lang))
 
 
 @dp.message_handler(IsAdmin(), state=AdvertisingStates.description)
@@ -241,7 +264,8 @@ async def check_advertising_creation_handler(message: Message, state: FSMContext
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         await AdvertisingStates.process.set()
-        await message.answer("Reklama muvaffaqiyatli yakunlanmadi", reply_markup=admin_advertisements_keyboard(user.lang))
+        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
     data = await state.get_data()
@@ -252,6 +276,7 @@ async def check_advertising_creation_handler(message: Message, state: FSMContext
         data['advertising_description'] = message.text
 
     await AdvertisingStates.checking.set()
+
     await message.answer_photo(
         image,
         caption=advertising_format(data=dict(title=title, description=description), is_ending=True, language=user.lang),
@@ -263,20 +288,25 @@ async def check_advertising_creation_handler(message: Message, state: FSMContext
 async def advertising_creation_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    await AdvertisingStates.process.set()
-
     if message.text not in [
         option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['uz']['yes'],
         option['confirmation_advertising']['ru']['no'], option['confirmation_advertising']['ru']['yes']
     ]:
+        error_message = "Sizga taqdim etilgan ugmalardan birini bosing" \
+            if user.lang == option['language']['uz'] else \
+            "Нажмите на один из предложенных вам вариантов"
+
         await message.answer(
-            text="Reklama muvaffaqiyatli yakunlanmadi. Siz aytilgan xabarni jo'natmadingiz",
+            text=error_message,
             reply_markup=admin_advertisements_keyboard(user.lang)
         )
         return
 
     if message.text in [option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['ru']['no']]:
-        await message.answer("Reklama muvaffaqiyatli yakunlanmadi", reply_markup=admin_advertisements_keyboard(user.lang))
+        await AdvertisingStates.process.set()
+
+        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
     data, admin = await state.get_data(), await user_controller.get_one(dict(telegram_id=message.from_user.id))
@@ -286,7 +316,9 @@ async def advertising_creation_handler(message: Message, state: FSMContext):
 
     path = join(dirname(abspath(__file__)), '..', '..', '..', 'test_app', 'static', 'media', 'advertising_photos', f'{title}.jpg')
 
-    audio_file = await bot.download_file_by_id(image)
+    audio_file = await dp.bot.download_file_by_id(image)
+
+    await AdvertisingStates.process.set()
 
     async with aiofiles.open(path, "wb") as f:
         await f.write(audio_file.getvalue())

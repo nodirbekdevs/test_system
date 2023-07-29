@@ -1,4 +1,4 @@
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import Message, CallbackQuery
 from aiogram.dispatcher import FSMContext
 
 from bot.loader import dp, bot
@@ -7,10 +7,9 @@ from bot.controllers import feedback_controller, user_controller
 from bot.filters.is_admin import IsAdmin
 from bot.helpers.formats import feedback_all_format, feedback_format, feedback_seen_format, feedback_done_format
 from bot.helpers.utils import Pagination
+from bot.helpers.config import SEEN, DONE
 from bot.keyboards.keyboard_buttons import admin, option
-from bot.keyboards.keyboards import (
-    admin_pages_keyboard, admin_feedback_keyboard, one_seen_feedback_keyboard, one_done_feedback_keyboard
-)
+from bot.keyboards.keyboards import admin_feedback_keyboard, one_feedback_keyboard
 from bot.states.user import UserStates
 from bot.states.feedback import FeedbackStates
 
@@ -18,7 +17,7 @@ from bot.states.feedback import FeedbackStates
 @dp.message_handler(
     IsAdmin(), text=[admin['pages']['uz']['feedback'], admin['pages']['ru']['feedback']], state=UserStates.process
 )
-async def feedback_handler(message: Message, state: FSMContext):
+async def admin_feedback_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
     await FeedbackStates.process.set()
     message_text = 'Izohlar sahifasi' if user.lang == option['language']['uz'] else "Страница комментариев"
@@ -53,7 +52,7 @@ async def active_feedback_pagination_handler(message: Message, state: FSMContext
         page=1, limit=6, query=dict(is_read=False, status=StatusChoices.ACTIVE), language=user.lang
     )
 
-    await FeedbackStates.active_pagination.set()
+    await FeedbackStates.active_feedback.set()
 
     await message.answer(paginated['message'], reply_markup=paginated['keyboard'])
 
@@ -65,7 +64,7 @@ async def active_feedback_pagination_handler(message: Message, state: FSMContext
 @dp.callback_query_handler(
     IsAdmin(),
     lambda query: query.data.startswith("left#selfeedback#") or query.data.startswith("right#selfeedback#"),
-    state=FeedbackStates.active_pagination
+    state=FeedbackStates.active_feedback
 )
 async def paginate_feedback_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
@@ -80,26 +79,21 @@ async def paginate_feedback_handler(query: CallbackQuery, state: FSMContext):
     await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])
 
 
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data == 'delete', state=FeedbackStates.active_pagination)
+@dp.callback_query_handler(IsAdmin(), lambda query: query.data == 'delete', state=FeedbackStates.active_feedback)
 async def back_from_feedback_pagination_handler(query: CallbackQuery, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
-
     await query.message.delete()
-    await FeedbackStates.process.set()
-
-    message_text = 'Izohlar sahifasi' if user.lang == option['language']['uz'] else "Страница комментариев"
-
-    await query.message.answer(message_text, reply_markup=admin_feedback_keyboard(user.lang))
+    await admin_feedback_handler(query.message, state)
 
 
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data.startswith("se_feed-"),
-                           state=FeedbackStates.active_pagination)
-async def get_single_active_feedback_handler(query: CallbackQuery, state: FSMContext):
+@dp.callback_query_handler(
+    IsAdmin(), lambda query: query.data.startswith("se_feed-"), state=FeedbackStates.active_feedback
+)
+async def get_one_active_feedback_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    _id = query.data.split("-")[1]
+    id = int(query.data.split("-")[1])
 
-    feedback = await feedback_controller.get_one(dict(id=int(_id)))
+    feedback = await feedback_controller.get_one(dict(id=id))
     author = await user_controller.get_one(dict(id=feedback.user_id))
 
     await FeedbackStates.one_active_feedback.set()
@@ -114,7 +108,9 @@ async def get_single_active_feedback_handler(query: CallbackQuery, state: FSMCon
 
     await query.message.edit_text(
         text=feedback_format(dope, user.lang),
-        reply_markup=one_seen_feedback_keyboard(feedback.id, feedback.mark, user.lang)
+        reply_markup=one_feedback_keyboard(
+            feedback_id=feedback.id, feedback_type=SEEN, language=user.lang, feedback_mark=feedback.mark
+        )
     )
 
 
@@ -158,9 +154,9 @@ async def get_single_active_feedback_handler(query: CallbackQuery, state: FSMCon
 async def seen_single_feedback_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    _id = query.data.split(".")[1]
+    id = int(query.data.split(".")[1])
 
-    feedback = await feedback_controller.get_one(dict(id=int(_id)))
+    feedback = await feedback_controller.get_one(dict(id=id))
     author = await user_controller.get_one(dict(id=feedback.user_id))
 
     dope = dict(name=author.name, feedback=feedback.reason)
@@ -183,7 +179,7 @@ async def seen_single_feedback_handler(query: CallbackQuery, state: FSMContext):
 
     await query.message.answer(message_text)
 
-    await FeedbackStates.active_pagination.set()
+    await FeedbackStates.active_feedback.set()
 
     paginated = await Pagination('FEEDBACK').paginate(1, 6, dict(is_read=False, status=StatusChoices.ACTIVE), user.lang)
 
@@ -199,14 +195,16 @@ async def seen_single_feedback_handler(query: CallbackQuery, state: FSMContext):
 async def back_from_single_feedback_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    await FeedbackStates.active_pagination.set()
+    await FeedbackStates.active_feedback.set()
 
     paginated = await Pagination('FEEDBACK').paginate(1, 6, dict(is_read=False, status=StatusChoices.ACTIVE), user.lang)
 
     if not paginated['status']:
+        await query.message.delete()
         await FeedbackStates.process.set()
-
-    await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])
+        await query.message.answer(paginated['message'], reply_markup=paginated['keyboard'])
+    else:
+        await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])
 
 
 @dp.message_handler(
@@ -215,7 +213,7 @@ async def back_from_single_feedback_handler(query: CallbackQuery, state: FSMCont
 async def seen_feedback_pagination_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    await FeedbackStates.seen_pagination.set()
+    await FeedbackStates.seen_feedback.set()
     paginated = await Pagination('FEEDBACK').paginate(1, 6, dict(is_read=True, status=StatusChoices.SEEN), user.lang)
 
     if not paginated['status']:
@@ -223,17 +221,18 @@ async def seen_feedback_pagination_handler(message: Message, state: FSMContext):
 
     await message.answer(paginated['message'], reply_markup=paginated['keyboard'])
 
-    message_text = "Hozirgacha bajarilayotgan izohlar" \
-        if user.lang == option['language']['uz'] else \
-        "Комментарии в процессе до сих пор"
+    if paginated['status']:
+        message_text = "Hozirgacha bajarilayotgan izohlar" \
+            if user.lang == option['language']['uz'] else \
+            "Комментарии в процессе до сих пор"
 
-    await message.answer(message_text)
+        await message.answer(message_text)
 
 
 @dp.callback_query_handler(
     IsAdmin(),
     lambda query: query.data.startswith("left#dofeedback#") or query.data.startswith("right#dofeedback#"),
-    state=FeedbackStates.seen_pagination
+    state=FeedbackStates.seen_feedback
 )
 async def paginate_seen_feedback_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
@@ -245,27 +244,22 @@ async def paginate_seen_feedback_handler(query: CallbackQuery, state: FSMContext
     await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])
 
 
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data == 'delete', state=FeedbackStates.seen_pagination)
+@dp.callback_query_handler(IsAdmin(), lambda query: query.data == 'delete', state=FeedbackStates.seen_feedback)
 async def back_from_feedback_pagination_handler(query: CallbackQuery, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
-
     await query.message.delete()
-    await FeedbackStates.process.set()
 
-    message_text = 'Izohlar sahifasi' if user.lang == option['language']['uz'] else "Страница комментариев"
-
-    await query.message.answer(message_text, reply_markup=admin_feedback_keyboard(user.lang))
+    await admin_feedback_handler(query.message, state)
 
 
 @dp.callback_query_handler(
-    IsAdmin(), lambda query: query.data.startswith("do_feed-"), state=FeedbackStates.seen_pagination
+    IsAdmin(), lambda query: query.data.startswith("do_feed-"), state=FeedbackStates.seen_feedback
 )
-async def get_single_active_feedback_handler(query: CallbackQuery, state: FSMContext):
+async def get_single_seen_feedback_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    id = query.data.split("-")[1]
+    id = int(query.data.split("-")[1])
 
-    feedback = await feedback_controller.get_one(dict(id=int(id)))
+    feedback = await feedback_controller.get_one(dict(id=id))
     author = await user_controller.get_one(dict(id=feedback.user_id))
 
     dope = dict(
@@ -279,7 +273,8 @@ async def get_single_active_feedback_handler(query: CallbackQuery, state: FSMCon
     await FeedbackStates.one_seen_feedback.set()
 
     await query.message.edit_text(
-        text=feedback_format(dope, user.lang), reply_markup=one_done_feedback_keyboard(feedback.id, user.lang)
+        text=feedback_format(dope, user.lang),
+        reply_markup=one_feedback_keyboard(feedback_id=feedback.id, feedback_type=DONE, language=user.lang)
     )
 
 
@@ -289,9 +284,9 @@ async def get_single_active_feedback_handler(query: CallbackQuery, state: FSMCon
 async def done_single_feedback_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    id = query.data.split(".")[1]
+    id = int(query.data.split(".")[1])
 
-    feedback = await feedback_controller.get_one(dict(id=int(id)))
+    feedback = await feedback_controller.get_one(dict(id=id))
     author = await user_controller.get_one(dict(id=feedback.user_id))
 
     dope = dict(name=author.name, feedback=feedback.reason)
@@ -305,7 +300,21 @@ async def done_single_feedback_handler(query: CallbackQuery, state: FSMContext):
 
     await query.message.answer(message_text)
 
-    await FeedbackStates.seen_pagination.set()
+    paginated = await Pagination('FEEDBACK').paginate(1, 6, dict(is_read=True, status=StatusChoices.SEEN), user.lang)
+
+    if not paginated['status']:
+        await FeedbackStates.process.set()
+        await query.message.delete()
+        await query.message.answer(paginated['message'], reply_markup=paginated['keyboard'])
+    else:
+        await FeedbackStates.seen_feedback.set()
+        await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])
+
+
+@dp.callback_query_handler(IsAdmin(), lambda query: query.data == 'back', state=FeedbackStates.one_seen_feedback)
+async def back_from_single_seen_feedback_handler(query: CallbackQuery, state: FSMContext):
+    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
+    await FeedbackStates.seen_feedback.set()
 
     paginated = await Pagination('FEEDBACK').paginate(1, 6, dict(is_read=True, status=StatusChoices.SEEN), user.lang)
 
@@ -314,17 +323,5 @@ async def done_single_feedback_handler(query: CallbackQuery, state: FSMContext):
         await query.message.delete()
         await query.message.answer(paginated['message'], reply_markup=paginated['keyboard'])
     else:
+        await FeedbackStates.seen_feedback.set()
         await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])
-
-
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data == 'back', state=FeedbackStates.one_seen_feedback)
-async def back_from_single_seen_feedback_handler(query: CallbackQuery, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
-    await FeedbackStates.active_pagination.set()
-
-    paginated = await Pagination('ADVERTISING').paginate(1, 6, dict(is_read=True, status=StatusChoices.SEEN), user.lang)
-
-    if not paginated['status']:
-        await FeedbackStates.process.set()
-
-    await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])

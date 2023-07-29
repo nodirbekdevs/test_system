@@ -3,12 +3,11 @@ from aiogram.dispatcher import FSMContext
 
 from bot.loader import dp
 from bot.controllers import user_controller
-from bot.models.user import User
 from bot.helpers.formats import user_format
 from bot.helpers.utils import is_num
 from bot.keyboards.keyboard_buttons import admin, option
 from bot.keyboards.keyboards import (
-    admin_settings_keyboard,
+    settings_keyboard,
     language_keyboard,
     back_keyboard
 )
@@ -24,7 +23,7 @@ async def user_settings_handler(message: Message, state: FSMContext):
 
     await message.answer(
         text=user_format(user, user.lang),
-        reply_markup=admin_settings_keyboard(user.lang)
+        reply_markup=settings_keyboard(user.lang)
     )
 
 
@@ -61,7 +60,7 @@ async def updating_user_name_handler(message: Message, state: FSMContext):
 
     await message.answer(
         text=user_format(user, user.lang),
-        reply_markup=admin_settings_keyboard(user.lang)
+        reply_markup=settings_keyboard(user.lang)
     )
 
     message_text = "Ismingiz muvaffaqiyatli o'zgartirildi" \
@@ -105,7 +104,7 @@ async def updating_user_number_handler(message: Message, state: FSMContext):
 
     await message.answer(
         text=user_format(user, user.lang),
-        reply_markup=admin_settings_keyboard(user.lang)
+        reply_markup=settings_keyboard(user.lang)
     )
 
     message_text = "Raqamingiz muvaffaqiyatli o'zgartirildi" \
@@ -155,7 +154,7 @@ async def updating_user_lang_handler(message: Message, state: FSMContext):
 
     await message.answer(
         text=user_format(user, user.lang),
-        reply_markup=admin_settings_keyboard(user.lang)
+        reply_markup=settings_keyboard(user.lang)
     )
 
     message_text = "Platformadagi tilingiz muvaffaqiyatli o'zgartirildi" \

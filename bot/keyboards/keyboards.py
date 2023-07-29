@@ -1,9 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-from bot.helpers.config import IS_SUBSCRIBED, ADMIN
-from bot.keyboards.keyboard_buttons import admin, instructor, student, option
-
-
-"----- Start of admin keyboards -----"
+from bot.helpers.config import IS_SUBSCRIBED, ADMIN, SECTION, TEST, INSTRUCTOR, SUBJECT, STUDENT, SEEN, DONE
+from bot.keyboards.keyboard_buttons import admin, instructor, student, option, all
 
 
 def admin_pages_keyboard(language):
@@ -26,38 +23,51 @@ def admin_pages_keyboard(language):
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
-def admin_settings_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(admin['settings']['uz']['name']), KeyboardButton(admin['settings']['uz']['number'])],
-        [KeyboardButton(admin['settings']['uz']['lang'])],
-        [KeyboardButton(option['main']['uz'])]
-    ]
+def admin_keyboard(section_type, language):
+    section = ''
 
-    ru_buttons = [
-        [KeyboardButton(admin['settings']['ru']['name']), KeyboardButton(admin['settings']['ru']['number'])],
-        [KeyboardButton(admin['settings']['ru']['lang'])],
-        [KeyboardButton(option['main']['ru'])]
-    ]
+    if section_type == ADMIN:
+        section = 'admins'
+    elif section_type == INSTRUCTOR:
+        section = 'instructors'
+    elif section_type == SUBJECT:
+        section = 'subjects'
+    elif section_type == STUDENT:
+        section = 'students'
 
-    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
+    buttons = [
+        [KeyboardButton(admin[section][language]['all']), KeyboardButton(admin[section][language]['add'])],
+        [KeyboardButton(option['main'][language])]
+    ]
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
-def admin_admins_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(admin['admins']['uz']['all']), KeyboardButton(admin['admins']['uz']['add'])],
-        [KeyboardButton(option['main']['uz'])]
+def one_admin_keyboard(user_id, language, data_type: str = ADMIN):
+    clause, back, kw = '', '', ''
+
+    if data_type == ADMIN:
+        kw = 'admin'
+    elif data_type == INSTRUCTOR:
+        kw = 'instructor'
+    elif data_type == STUDENT:
+        kw = 'student'
+    elif data_type == SUBJECT:
+        kw = 'subject'
+
+    if language == option['language']['uz']:
+        clause = "O'chirish"
+        back = option['back']['uz']
+    if language == option['language']['ru']:
+        clause = "Удалить"
+        back = option['back']['ru']
+
+    buttons = [
+        [InlineKeyboardButton(text=clause, callback_data=f"delete.{kw}.{user_id}")],
+        [InlineKeyboardButton(text=back, callback_data="back")],
     ]
 
-    ru_buttons = [
-        [KeyboardButton(admin['admins']['ru']['all']), KeyboardButton(admin['admins']['ru']['add'])],
-        [KeyboardButton(option['main']['ru'])]
-    ]
-
-    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def admin_feedback_keyboard(language):
@@ -78,35 +88,25 @@ def admin_feedback_keyboard(language):
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
-def one_seen_feedback_keyboard(feedback_id, feedback_mark, language):
+def one_feedback_keyboard(feedback_id, feedback_type, language, feedback_mark = ''):
     clause, info = "", ""
 
     back = option['back']['uz'] if language == option['language']['uz'] else option['back']['ru']
 
-    if feedback_mark == option['feedback']['uz']['good'] or feedback_mark == option['feedback']['ru']['good']:
-        clause = "Ko'rildi" if language == option['language']['uz'] else "Видено"
-        info = 's_d'
-    elif feedback_mark == option['feedback']['uz']['bad'] or feedback_mark == option['feedback']['ru']['bad']:
-        clause = "Muommoni ko'rish boshlandi" if language == option['language']['uz'] else "Видение проблемы началось"
-        info = 'seen'
-
-    buttons = [
-        [InlineKeyboardButton(text=clause, callback_data=f'{info}.{feedback_id}')],
-        [InlineKeyboardButton(text=back, callback_data='back')]
-    ]
-
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-def one_done_feedback_keyboard(feedback_id, language):
-    clause, back, info = "", "", "done"
-
-    if language == option['language']['uz']:
-        clause = "Muommoni hal qilindi"
-        back = option['back']['uz']
-    if language == option['language']['ru']:
-        clause = "Задача решена"
-        back = option['back']['ru']
+    if feedback_type == SEEN:
+        if feedback_mark == option['feedback']['uz']['good'] or feedback_mark == option['feedback']['ru']['good']:
+            clause = "Ko'rildi" if language == option['language']['uz'] else "Видено"
+            info = 's_d'
+        elif feedback_mark == option['feedback']['uz']['bad'] or feedback_mark == option['feedback']['ru']['bad']:
+            clause = "Muommoni ko'rish boshlandi" if language == option['language']['uz'] else "Видение проблемы началось"
+            info = 'seen'
+    elif feedback_type == DONE:
+        if language == option['language']['uz']:
+            clause = "Muommoni hal qilindi"
+            back = option['back']['uz']
+        if language == option['language']['ru']:
+            clause = "Задача решена"
+            back = option['back']['ru']
 
     buttons = [
         [InlineKeyboardButton(text=clause, callback_data=f'{info}.{feedback_id}')],
@@ -155,14 +155,16 @@ def one_advertising_keyboard(id, language):
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def admin_instructors_keyboard(language):
+def settings_keyboard(language):
     uz_buttons = [
-        [KeyboardButton(admin['instructors']['uz']['all']), KeyboardButton(admin['instructors']['uz']['add'])],
+        [KeyboardButton(all['settings']['uz']['name']), KeyboardButton(all['settings']['uz']['number'])],
+        [KeyboardButton(all['settings']['uz']['lang'])],
         [KeyboardButton(option['main']['uz'])]
     ]
 
     ru_buttons = [
-        [KeyboardButton(admin['instructors']['ru']['all']), KeyboardButton(admin['instructors']['ru']['add'])],
+        [KeyboardButton(all['settings']['ru']['name']), KeyboardButton(all['settings']['ru']['number'])],
+        [KeyboardButton(all['settings']['ru']['lang'])],
         [KeyboardButton(option['main']['ru'])]
     ]
 
@@ -171,14 +173,37 @@ def admin_instructors_keyboard(language):
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
-def admin_students_keyboard(language):
+def instructor_pages_keyboard(language):
     uz_buttons = [
-        [KeyboardButton(admin['students']['uz']['all']), KeyboardButton(admin['students']['uz']['add'])],
+        [KeyboardButton(instructor['pages']['uz']['settings']), KeyboardButton(instructor['pages']['uz']['feedback'])],
+        [KeyboardButton(instructor['pages']['uz']['sections']), KeyboardButton(instructor['pages']['uz']['tests'])]
+    ]
+
+    ru_buttons = [
+        [KeyboardButton(instructor['pages']['ru']['settings']), KeyboardButton(instructor['pages']['ru']['feedback'])],
+        [KeyboardButton(instructor['pages']['ru']['sections']), KeyboardButton(instructor['pages']['ru']['tests'])]
+    ]
+
+    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
+
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+
+
+def instructor_keyboard(section_type, language):
+    section = ''
+
+    if section_type == SECTION:
+        section = 'sections'
+    elif section_type == TEST:
+        section = 'tests'
+
+    uz_buttons = [
+        [KeyboardButton(instructor[section]['uz']['all']), KeyboardButton(instructor[section]['uz']['add'])],
         [KeyboardButton(option['main']['uz'])]
     ]
 
     ru_buttons = [
-        [KeyboardButton(admin['students']['ru']['all']), KeyboardButton(admin['students']['ru']['add'])],
+        [KeyboardButton(instructor[section]['ru']['all']), KeyboardButton(instructor[section]['ru']['add'])],
         [KeyboardButton(option['main']['ru'])]
     ]
 
@@ -187,65 +212,79 @@ def admin_students_keyboard(language):
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
-def admin_subjects_keyboard(language):
+def one_instructor_keyboard(section_id, data_type, language):
+    kw, word, back = "", "", ""
+
+    if data_type == SECTION:
+        kw = 'section'
+    if data_type == TEST:
+        kw = 'test'
+
+    if language == option['language']['uz']:
+        word = "O'chirish"
+        back = option['back']['uz']
+    elif language == option['language']['ru']:
+        word = "Удалить"
+        back = option['back']['ru']
+
+    buttons = [
+        [InlineKeyboardButton(text=word, callback_data=f"delete.{kw}.{section_id}")],
+        [InlineKeyboardButton(text=back, callback_data="back")]
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def student_pages_keyboard(language):
     uz_buttons = [
-        [KeyboardButton(admin['subjects']['uz']['all']), KeyboardButton(admin['subjects']['uz']['add'])],
+        [KeyboardButton(instructor['pages']['uz']['settings']), KeyboardButton(instructor['pages']['uz']['feedback'])],
+        [KeyboardButton(instructor['pages']['uz']['tests'])]
+    ]
+
+    ru_buttons = [
+        [KeyboardButton(instructor['pages']['ru']['settings']), KeyboardButton(instructor['pages']['ru']['feedback'])],
+        [KeyboardButton(instructor['pages']['ru']['tests'])]
+    ]
+
+    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
+
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+
+
+def student_instructor_feedback_keyboard(language):
+    uz_buttons = [
+        [KeyboardButton(all['feedback']['uz']['add']), KeyboardButton(all['feedback']['uz']['my_feedback'])],
         [KeyboardButton(option['main']['uz'])]
     ]
 
     ru_buttons = [
-        [KeyboardButton(admin['subjects']['ru']['all']), KeyboardButton(admin['subjects']['ru']['add'])],
+        [KeyboardButton(all['feedback']['ru']['add']), KeyboardButton(all['feedback']['ru']['my_feedback'])],
         [KeyboardButton(option['main']['ru'])]
     ]
 
-    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
+    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
 
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
-
-
-def one_admin_instructor_keyboard(user_id, user_type: str = ADMIN) -> InlineKeyboardMarkup:
-
-    kw = 'admin' if user_type == ADMIN else 'instructor'
-
-    buttons = [
-        [InlineKeyboardButton(text="Удалить", callback_data=f"delete.{kw}.{user_id}")],
-        [InlineKeyboardButton(text="Назад", callback_data="back")],
-    ]
-
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
 
 
-def one_subject_keyboard(subject_id, language, user_type: str = ADMIN) -> InlineKeyboardMarkup:
-    kw, back = '', ''
+def subjects_sections_keyboard(datas, language, limit=3):
+    buttons, arr = [], []
 
-    if language == option['language']['uz']:
-        kw = "O'chirish"
-        back = option['back']['uz']
-    if language == option['language']['ru']:
-        kw = "Удалить"
-        back = option['back']['ru']
+    for data in datas:
+        if language == option['language']['uz']:
+            arr.append(data.name_uz)
+        elif language == option['language']['ru']:
+            arr.append(data.name_ru)
 
-    buttons = [
-        [InlineKeyboardButton(text=kw, callback_data=f"delete.subject.{subject_id}")],
-        [InlineKeyboardButton(text=back, callback_data="back")],
-    ]
+        if len(arr) % limit == 0:
+            buttons.append(arr)
+            arr = []
+
+    buttons.append(arr)
+
+    buttons.append([option['back']['uz']]) if language == option['language']['uz'] else buttons.append([option['back']['ru']])
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-def one_admin_keyboard(id) -> InlineKeyboardMarkup:
-    buttons = [
-        [InlineKeyboardButton(text="Удалить", callback_data=f"delete.admin.{id}")],
-        [InlineKeyboardButton(text="Назад", callback_data="back")],
-    ]
-
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-"----- End of admin keyboards -----"
-
-
-"----- Start of option keyboards -----"
 
 
 def is_subscribed_keyboard(language_code, CHANNEL_LINK) -> InlineKeyboardMarkup:
@@ -395,207 +434,3 @@ def confirmation_with_back_keyboard(language):
     keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
-
-
-"----- End of option keyboards -----"
-
-
-"----- Start of instructor keyboards -----"
-
-
-def instructor_pages_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(instructor['pages']['uz']['settings']), KeyboardButton(instructor['pages']['uz']['feedback'])],
-        [KeyboardButton(instructor['pages']['uz']['sections']), KeyboardButton(instructor['pages']['uz']['tests'])]
-    ]
-
-    ru_buttons = [
-        [KeyboardButton(instructor['pages']['ru']['settings']), KeyboardButton(instructor['pages']['ru']['feedback'])],
-        [KeyboardButton(instructor['pages']['ru']['sections']), KeyboardButton(instructor['pages']['ru']['tests'])]
-    ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
-
-
-def instructor_settings_keyboard(language):
-    buttons_uz = [
-        [KeyboardButton(instructor['settings']['uz']['name']), KeyboardButton(instructor['settings']['uz']['number'])],
-        [KeyboardButton(instructor['settings']['uz']['lang'])],
-        [KeyboardButton(option['main']['uz'])]
-    ]
-
-    buttons_ru = [
-        [KeyboardButton(instructor['settings']['ru']['name']), KeyboardButton(instructor['settings']['ru']['number'])],
-        [KeyboardButton(instructor['settings']['ru']['lang'])],
-        [KeyboardButton(option['main']['ru'])]
-    ]
-
-    keyboard = buttons_uz if language == option['language']['uz'] else buttons_ru
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
-
-
-def instructor_sections_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(instructor['sections']['uz']['all']), KeyboardButton(instructor['sections']['uz']['add'])],
-        [KeyboardButton(option['main']['uz'])]
-    ]
-
-    ru_buttons = [
-        [KeyboardButton(instructor['sections']['ru']['all']), KeyboardButton(instructor['sections']['ru']['add'])],
-        [KeyboardButton(option['main']['ru'])]
-    ]
-
-    buttons = uz_buttons if language == option['languages']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
-
-
-def one_section_keyboard(section_id, language):
-    word, back = "", ""
-
-    if language == option['language']['uz']:
-        word = "O'chirish"
-        back = option['back']['uz']
-    elif language == option['language']['ru']:
-        word = "Удалить"
-        back = option['back']['ru']
-
-    buttons = [
-        [InlineKeyboardButton(text=word, callback_data=f"delete.section.{section_id}")],
-        [InlineKeyboardButton(text=back, callback_data="back")]
-    ]
-
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-def one_test_keyboard(section_id, language):
-    word, back = "", ""
-
-    if language == option['language']['uz']:
-        word = "O'chirish"
-        back = option['back']['uz']
-    elif language == option['language']['ru']:
-        word = "Удалить"
-        back = option['back']['ru']
-
-    buttons = [
-        [InlineKeyboardButton(text=word, callback_data=f"delete.test.{section_id}")],
-        [InlineKeyboardButton(text=back, callback_data="back")]
-    ]
-
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-def instructor_tests_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(instructor['tests']['uz']['all']), KeyboardButton(instructor['tests']['uz']['add'])],
-        [KeyboardButton(option['main']['uz'])]
-    ]
-
-    ru_buttons = [
-        [KeyboardButton(instructor['tests']['ru']['all']), KeyboardButton(instructor['tests']['ru']['add'])],
-        [KeyboardButton(option['main']['ru'])]
-    ]
-
-    buttons = uz_buttons if language == option['languages']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
-
-
-def instructor_feedback_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(instructor['feedback']['uz']['add']), KeyboardButton(instructor['feedback']['uz']['my_feedback'])],
-        [KeyboardButton(option['main']['uz'])]
-    ]
-
-    ru_buttons = [
-        [KeyboardButton(instructor['feedback']['ru']['add']), KeyboardButton(instructor['feedback']['ru']['my_feedback'])],
-        [KeyboardButton(option['main']['ru'])]
-    ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
-
-
-"----- End of instructor keyboards -----"
-
-
-"----- Start of student keyboards -----"
-
-
-def student_pages_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(instructor['pages']['uz']['settings']), KeyboardButton(instructor['pages']['uz']['feedback'])],
-        [KeyboardButton(instructor['pages']['uz']['tests'])]
-    ]
-
-    ru_buttons = [
-        [KeyboardButton(instructor['pages']['ru']['settings']), KeyboardButton(instructor['pages']['ru']['feedback'])],
-        [KeyboardButton(instructor['pages']['ru']['tests'])]
-    ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
-
-
-def student_settings_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(student['settings']['uz']['name']), KeyboardButton(student['settings']['uz']['number'])],
-        [KeyboardButton(student['settings']['uz']['lang'])],
-        [KeyboardButton(option['main']['uz'])]
-    ]
-
-    ru_buttons = [
-        [KeyboardButton(instructor['student']['ru']['name']), KeyboardButton(student['settings']['ru']['number'])],
-        [KeyboardButton(instructor['student']['ru']['lang'])],
-        [KeyboardButton(option['main']['ru'])]
-    ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
-
-
-def student_feedback_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(student['feedback']['uz']['add']), KeyboardButton(student['feedback']['uz']['my_feedback'])],
-        [KeyboardButton(option['main']['uz'])]
-    ]
-
-    ru_buttons = [
-        [KeyboardButton(student['feedback']['ru']['add']), KeyboardButton(student['feedback']['ru']['my_feedback'])],
-        [KeyboardButton(option['main']['ru'])]
-    ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
-
-
-"----- End of student keyboards -----"
-
-
-def subjects_keyboard(data, language, limit=3):
-    buttons, arr = [], []
-
-    for subject in data:
-        if language == option['language']['uz']:
-            arr.append(subject.name_uz)
-        elif language == option['language']['ru']:
-            arr.append(subject.name_ru)
-
-        if len(arr) % limit == 0:
-            buttons.append(arr)
-            arr = []
-
-    buttons.append(arr)
-
-    buttons.append([option['back']['uz']]) if language == option['language']['uz'] else buttons.append([option['back']['ru']])
-
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
-

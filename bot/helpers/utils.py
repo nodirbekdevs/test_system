@@ -23,7 +23,7 @@ class Pagination:
     def __init__(self, data_type: str):
         self.data_type = data_type
 
-    async def paginate(self, page: int, limit: int, query: dict, language: str, order_by_columns, form: str = '') -> dict:
+    async def paginate(self, page: int, limit: int, query: dict, language: str, order_by_columns=[], form: str = '') -> dict:
         text, clause, data, all_data, keyboard, arr, author, status = "", "", [], [], InlineKeyboardMarkup(), [], {}, True
 
         offset = limit * (page - 1)
@@ -136,9 +136,9 @@ class Pagination:
             callback_data = ""
 
             if self.data_type == 'ADMINS':
-                callback_data = f"sadmin_{info.id}"
+                callback_data = f"sadmin-{info.id}"
             if self.data_type == 'INSTRUCTORS':
-                callback_data = f"sins_{info.id}"
+                callback_data = f"sins-{info.id}"
             elif self.data_type == 'SUBJECT':
                 callback_data = f"ssubject-{info.id}"
             elif self.data_type == 'SECTION':

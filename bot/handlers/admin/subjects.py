@@ -7,10 +7,11 @@ from bot.loader import dp
 from bot.filters.is_admin import IsAdmin
 from bot.controllers import user_controller, subject_controller
 from bot.models.subject import StatusChoices
-from bot.keyboards.keyboards import admin_subjects_keyboard, one_subject_keyboard, back_keyboard, confirmation_keyboard
+from bot.keyboards.keyboards import admin_keyboard, one_admin_keyboard, back_keyboard, confirmation_keyboard
 from bot.keyboards.keyboard_buttons import admin, option
 from bot.helpers.utils import Pagination, is_num
 from bot.helpers.formats import subject_format
+from bot.helpers.config import SUBJECT
 from bot.states.subject import SubjectStates
 from bot.states.user import UserStates
 
@@ -25,7 +26,7 @@ async def admin_subjects_handler(message: Message, state: FSMContext):
 
     await SubjectStates.process.set()
 
-    await message.answer(message_text, reply_markup=admin_subjects_keyboard(user.lang))
+    await message.answer(message_text, reply_markup=admin_keyboard(SUBJECT, user.lang))
 
 
 @dp.message_handler(
@@ -44,15 +45,8 @@ async def all_subjects_handler(message: Message, state: FSMContext):
 
 @dp.callback_query_handler(IsAdmin(), lambda query: query.data == "delete", state=SubjectStates.all_subjects)
 async def back_from_all_subjects_handler(query: CallbackQuery, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
-
-    message_text = "Fanlar sahifasi" if user.lang == option['language']['uz'] else "Страница предметов"
-
-    await SubjectStates.process.set()
-
     await query.message.delete()
-
-    await query.message.answer(text=message_text, reply_markup=admin_subjects_keyboard(user.lang))
+    await admin_subjects_handler(query.message, state)
 
 
 @dp.callback_query_handler(
@@ -80,7 +74,7 @@ async def get_subject_handler(query: CallbackQuery, state: FSMContext):
 
     data = dict(
         name=selected_subject.name_uz if user.lang == option['language']['uz'] else selected_subject.name_ru,
-        description=selected_subject.description,
+        description=selected_subject.description_uz if user.lang == option['language']['uz'] else selected_subject.description_ru,
         status=selected_subject.status,
         created_at=selected_subject.created_at
     )
@@ -89,7 +83,7 @@ async def get_subject_handler(query: CallbackQuery, state: FSMContext):
 
     await query.message.edit_text(
         text=subject_format(data, user.lang),
-        reply_markup=one_subject_keyboard(id, user.lang)
+        reply_markup=one_admin_keyboard(id, user.lang, SUBJECT)
     )
 
 
@@ -261,5 +255,5 @@ async def subject_creation_handler(message: Message, state: FSMContext):
 
     await message.answer(
         message_text,
-        reply_markup=admin_subjects_keyboard(user.lang)
+        reply_markup=admin_keyboard(SUBJECT, user.lang)
     )

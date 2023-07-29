@@ -7,7 +7,7 @@ from bot.controllers import user_controller, feedback_controller
 from bot.models.feedback import StatusChoices
 from bot.helpers.formats import feedback_all_format
 from bot.keyboards.keyboard_buttons import option, instructor
-from bot.keyboards.keyboards import instructor_feedback_keyboard, feedback_keyboard, back_keyboard
+from bot.keyboards.keyboards import student_instructor_feedback_keyboard, feedback_keyboard, back_keyboard
 from bot.states.feedback import FeedbackStates
 from bot.states.user import UserStates
 
@@ -24,7 +24,7 @@ async def student_instructor_feedback_handler(message: Message, state: FSMContex
 
     await FeedbackStates.process.set()
 
-    await message.answer(message_text, reply_markup=instructor_feedback_keyboard(user.lang))
+    await message.answer(message_text, reply_markup=student_instructor_feedback_keyboard(user.lang))
 
 
 @dp.message_handler(
@@ -98,7 +98,7 @@ async def creation_student_instructor_feedback_handler(message: Message, state: 
 
     await FeedbackStates.process.set()
 
-    await message.answer(message_text, reply_markup=instructor_feedback_keyboard(user.lang))
+    await message.answer(message_text, reply_markup=student_instructor_feedback_keyboard(user.lang))
 
 
 @dp.message_handler(
@@ -127,5 +127,5 @@ async def all_student_instructor_feedback_handler(message: Message, state: FSMCo
 
     await message.answer(
         feedback_all_format(feedback_data, user.lang),
-        reply_markup=instructor_feedback_keyboard(user.lang)
+        reply_markup=student_instructor_feedback_keyboard(user.lang)
     )

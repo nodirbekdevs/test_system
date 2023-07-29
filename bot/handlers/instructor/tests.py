@@ -4,17 +4,19 @@ from aiogram.types import CallbackQuery, Message, ContentTypes
 
 from deep_translator import GoogleTranslator
 from os.path import join, abspath, dirname
+from asyncio import to_thread
 
 from bot.loader import dp
 from bot.controllers import user_controller, section_controller, test_controller, subject_controller
 from bot.models.user import User
 from bot.models.test import StatusChoices
-from bot.keyboards.keyboards import instructor_tests_keyboard, one_test_keyboard, subjects_keyboard, \
+from bot.keyboards.keyboards import instructor_keyboard, one_instructor_keyboard, subjects_sections_keyboard, \
     confirmation_keyboard, next_keyboard, back_keyboard
 from bot.filters.is_instructor import IsInstructor
 from bot.keyboards.keyboard_buttons import instructor, option
 from bot.helpers.utils import Pagination, is_num
 from bot.helpers.formats import test_format
+from bot.helpers.config import TEST
 from bot.states.test import TestStates
 from bot.states.user import UserStates
 
@@ -31,7 +33,7 @@ async def instructor_tests_handler(message: Message, state: FSMContext):
 
     await TestStates.process.set()
 
-    await message.answer(message_text, reply_markup=instructor_tests_keyboard(user.lang))
+    await message.answer(message_text, reply_markup=instructor_keyboard(TEST, user.lang))
 
 
 @dp.message_handler(
@@ -60,7 +62,7 @@ async def back_from_all_tests_handler(query: CallbackQuery, state: FSMContext):
 
     await TestStates.process.set()
 
-    await query.message.edit_text(message_text, reply_markup=instructor_tests_keyboard(user.lang))
+    await query.message.edit_text(message_text, reply_markup=instructor_keyboard(TEST, user.lang))
 
 
 @dp.callback_query_handler(
@@ -82,11 +84,11 @@ async def pagination_instructor_tests_handler(query: CallbackQuery, state: FSMCo
     IsInstructor(), lambda query: query.data.startswith("stest-"), state=TestStates.all_tests
 )
 async def get_instructor_test_handler(query: CallbackQuery, state: FSMContext):
-    id = query.data.split("-")[1]
+    id = int(query.data.split("-")[1])
 
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    test = await test_controller.get_one(dict(id=int(id)))
+    test = await test_controller.get_one(dict(id=id))
 
     subject = await subject_controller.get_one(dict(id=test.subject_id))
     section = await section_controller.get_one(dict(id=test.section_id))
@@ -105,7 +107,7 @@ async def get_instructor_test_handler(query: CallbackQuery, state: FSMContext):
     )
 
     await query.message.edit_text(
-        text=test_format(data, user.lang), reply_markup=one_test_keyboard(section.id, user.lang)
+        text=test_format(data, user.lang), reply_markup=one_instructor_keyboard(TEST, section.id, user.lang)
     )
 
 
@@ -181,7 +183,7 @@ async def requesting_subject_handler(message: Message, state: FSMContext):
         if user.lang == option['language']['uz'] else \
         "Для какого предмета вы хотите добавить тест"
 
-    await message.answer(text=message_text, reply_markup=subjects_keyboard(subjects, user.lang, 3))
+    await message.answer(text=message_text, reply_markup=subjects_sections_keyboard(subjects, user.lang, 3))
 
 
 @dp.message_handler(IsInstructor(), state=TestStates.subject)
@@ -223,7 +225,7 @@ async def requesting_section_handler(message: Message, state: FSMContext):
         if user.lang == option['language']['uz'] else \
         "Для какого секции вы хотите добавить тест"
 
-    await message.answer(message_text, reply_markup=subjects_keyboard(sections, user.lang))
+    await message.answer(message_text, reply_markup=subjects_sections_keyboard(sections, user.lang))
 
 
 @dp.message_handler(state=TestStates.section)
@@ -271,6 +273,11 @@ async def requesting_question_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     message_text = "Test savolini yuboring" if user.lang == option['language']['uz'] else "Отправьте вопрос теста"
+
+    path = join(dirname(abspath(__file__)), '..', '..', '..', 'test_app', 'static', 'media', 'test_photos')
+
+    if not await to_thread(exists, path):
+        await to_thread(mkdir, path)
 
     if message.text:
         if is_num(message.text):
@@ -426,7 +433,7 @@ async def test_creation_handler(message: Message, state: FSMContext):
     if message.text in [option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['ru']['no']]:
         error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
 
-        await message.answer(error_message, reply_markup=instructor_tests_keyboard(user.lang))
+        await message.answer(error_message, reply_markup=instructor_keyboard(TEST, user.lang))
         return
 
     data = await state.get_data()
@@ -499,5 +506,5 @@ async def test_creation_handler(message: Message, state: FSMContext):
 
     await message.answer(
         message_text,
-        reply_markup=instructor_tests_keyboard(user.lang)
+        reply_markup=instructor_keyboard(TEST, user.lang)
     )

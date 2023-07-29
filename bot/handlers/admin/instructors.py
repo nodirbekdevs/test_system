@@ -3,13 +3,13 @@ from aiogram.types import CallbackQuery, Message
 
 from bot.loader import dp, bot
 from bot.filters.is_admin import IsAdmin
-from bot.helpers.config import INSTRUCTOR
 from bot.controllers import user_controller
 from bot.models.user import User
-from bot.keyboards.keyboards import admin_instructors_keyboard, one_admin_instructor_keyboard, back_keyboard
+from bot.keyboards.keyboards import admin_keyboard, one_admin_keyboard, back_keyboard
 from bot.keyboards.keyboard_buttons import admin, option
 from bot.helpers.utils import Pagination, is_num
 from bot.helpers.formats import user_format
+from bot.helpers.config import INSTRUCTOR
 from bot.states.instructors import InstructorStates
 from bot.states.user import UserStates
 
@@ -24,7 +24,7 @@ async def admin_instructors_handler(message: Message, state: FSMContext):
 
     await InstructorStates.process.set()
 
-    await message.answer(message_text, reply_markup=admin_instructors_keyboard(user.lang))
+    await message.answer(message_text, reply_markup=admin_keyboard(INSTRUCTOR, user.lang))
 
 
 @dp.message_handler(
@@ -43,15 +43,8 @@ async def all_instructors_handler(message: Message, state: FSMContext):
 
 @dp.callback_query_handler(IsAdmin(), lambda query: query.data == "delete", state=InstructorStates.all_instructors)
 async def back_from_all_instructors_handler(query: CallbackQuery, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
-
-    message_text = "Instructorlar sahifasi" if user.lang == option['language']['uz'] else "Страница инструкторов"
-
-    await InstructorStates.process.set()
-
     await query.message.delete()
-
-    await query.message.answer(text=message_text, reply_markup=admin_instructors_keyboard(user.lang))
+    await all_instructors_handler(query.message, state)
 
 
 @dp.callback_query_handler(
@@ -69,11 +62,11 @@ async def pagination_instructors_handler(query: CallbackQuery, state: FSMContext
     await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
 
 
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data.startswith("sins_"), state=InstructorStates.all_instructors)
-async def get_instructors_handler(query: CallbackQuery, state: FSMContext):
+@dp.callback_query_handler(IsAdmin(), lambda query: query.data.startswith("sins-"), state=InstructorStates.all_instructors)
+async def get_instructor_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    id = int(query.data.split("_")[1])
+    id = int(query.data.split("-")[1])
 
     selected_instructor = await user_controller.get_one(dict(id=id))
 
@@ -81,7 +74,7 @@ async def get_instructors_handler(query: CallbackQuery, state: FSMContext):
 
     await query.message.edit_text(
         text=user_format(selected_instructor, user.lang),
-        reply_markup=one_admin_instructor_keyboard(id, INSTRUCTOR)
+        reply_markup=one_admin_keyboard(id, user.lang, INSTRUCTOR)
     )
 
 
@@ -100,7 +93,9 @@ async def back_from_get_instructor_handler(query: CallbackQuery, state: FSMConte
         await query.message.answer(text=paginated['message'], reply_markup=paginated['keyboard'])
 
 
-@dp.callback_query_handler(IsAdmin(), lambda query: query.data.startswith("delete.instructor."), state=InstructorStates.one_instructor)
+@dp.callback_query_handler(
+    IsAdmin(), lambda query: query.data.startswith("delete.instructor."), state=InstructorStates.one_instructor
+)
 async def delete_instructor_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
@@ -165,7 +160,7 @@ async def creating_instructor_handler(message: Message, state: FSMContext):
 
         await selected_instructor.update(type=User.TypeChoices.INSTRUCTOR).apply()
         await InstructorStates.process.set()
-        await message.answer(message_text, reply_markup=admin_instructors_keyboard(user.lang))
+        await message.answer(message_text, reply_markup=admin_keyboard(INSTRUCTOR, user.lang))
         return
 
     try:
@@ -200,4 +195,4 @@ async def creating_instructor_handler(message: Message, state: FSMContext):
 
     message_text = "Yangi instructor qo'shildi" if user.lang == option['language']['uz'] else "Новый инструктор добален"
 
-    await message.answer(message_text, reply_markup=admin_instructors_keyboard(user.lang))
+    await message.answer(message_text, reply_markup=admin_keyboard(INSTRUCTOR, user.lang))
