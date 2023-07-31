@@ -34,7 +34,7 @@ async def admin_instructors_handler(message: Message, state: FSMContext):
 async def all_instructors_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    paginated = await Pagination("INSTRUCTORS").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
+    paginated = await Pagination("INSTRUCTOR").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
 
     if paginated['status']:
         await InstructorStates.all_instructors.set()
@@ -58,7 +58,7 @@ async def pagination_instructors_handler(query: CallbackQuery, state: FSMContext
 
     page = int(query.data.split("#")[2])
 
-    paginated = await Pagination("INSTRUCTORS").paginate(page, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
+    paginated = await Pagination("INSTRUCTOR").paginate(page, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
 
     await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
 
@@ -83,7 +83,7 @@ async def get_instructor_handler(query: CallbackQuery, state: FSMContext):
 async def back_from_get_instructor_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    paginated = await Pagination("INSTRUCTORS").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
+    paginated = await Pagination("INSTRUCTOR").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
 
     if paginated['status']:
         await InstructorStates.all_instructors.set()
@@ -104,7 +104,7 @@ async def delete_instructor_handler(query: CallbackQuery, state: FSMContext):
 
     await user_controller.delete(dict(id=id))
 
-    paginated = await Pagination("INSTRUCTORS").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
+    paginated = await Pagination("INSTRUCTOR").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
 
     if not paginated['status']:
         await InstructorStates.process.set()

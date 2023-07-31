@@ -17,6 +17,10 @@ from bot.keyboards.keyboards import (
 )
 
 
+def translator(sentence_uz, sentence_ru, language):
+    return sentence_uz if language == option['language']['uz'] else sentence_ru
+
+
 class Pagination:
     def __init__(self, data_type: str):
         self.data_type = data_type
@@ -39,12 +43,12 @@ class Pagination:
             data = await advertising_controller.get_pagination(query, offset, limit)
             all_data = await advertising_controller.get_all(query)
             clause = 'advertising'
-        elif self.data_type in ['ADMINS', 'INSTRUCTORS', 'STUDENTS']:
+        elif self.data_type in ['ADMIN', 'INSTRUCTOR', 'STUDENT']:
             data = await user_controller.get_pagination(query, offset, limit)
             all_data = await user_controller.get_all(query)
-            if self.data_type == 'ADMINS':
+            if self.data_type == 'ADMIN':
                 clause = 'admins'
-            if self.data_type == 'INSTRUCTORS':
+            if self.data_type == 'INSTRUCTOR':
                 clause = 'instructors'
         elif self.data_type == 'FEEDBACK':
             data = await feedback_controller.get_pagination(query, offset, limit)
@@ -64,80 +68,61 @@ class Pagination:
 
         if len(data) <= 0:
             if self.data_type == 'SUBJECT':
-                text = "Hozircha fanlar qo'shilmagan" \
-                    if language == option['language']['uz'] else \
-                    "Ни одна предмет еще не добавлена"
-
+                text = translator("Hozircha fanlar qo'shilmagan", "Ни одна предмет еще не добавлена", language)
                 keyboard = admin_keyboard(SUBJECT, language)
             elif self.data_type == 'SECTION':
-                text = "Hozircha bu tip uchun ismlar qo'shilmagan" \
-                    if language == option['language']['uz'] else \
-                    "Имена для этого типа пока не добавлены"
-
+                text = translator("Hozircha bo'limlar qo'shilmagan", "Секции еще не добавлены", language)
                 keyboard = instructor_keyboard(SECTION, language)
             elif self.data_type == 'TEST':
-                text = "Hozircha bu tip uchun testlar qo'shilmagan" \
-                    if language == option['language']['uz'] else \
-                    "Тесты для этого типа пока не добавлены"
-
+                text = translator(
+                    "Hozircha bu bo'lim uchun testlar qo'shilmagan",
+                    "Тесты для этой секции пока не добавлены",
+                    language
+                )
                 keyboard = instructor_keyboard(TEST, language)
             elif self.data_type == 'PLACE':
                 text = "Hozircha bu tip uchun tabriklar qo'shilmagan" \
                     if language == option['language']['uz'] else \
                     "Поздравления для этого типа пока не добавлены"
             elif self.data_type == 'ADVERTISING':
-                text = "Hozircha reklamalar qo'shilmagan" \
-                    if language == option['language']['uz'] else \
-                    "Объявления еще не добавлены"
-
+                text = translator("Hozircha reklamalar qo'shilmagan", "Объявления еще не добавлены", language)
                 keyboard = admin_advertisements_keyboard(language)
             elif self.data_type == 'FEEDBACK':
                 if query['status'] == FeedbackStatusChoices.ACTIVE:
-                    text = 'Hali izohlar mavjud emas' if language == option['language'][
-                        'uz'] else 'Комментариев пока нет'
+                    text = translator('Hali izohlar mavjud emas', 'Комментариев пока нет', language)
                 elif query['status'] == FeedbackStatusChoices.SEEN:
-                    text = 'Hali bajarilayotgan izohlar mavjud emas' \
-                        if language == option['language']['uz'] else \
-                        "Комментариев пока нет"
-
+                    text = translator('Hali bajarilayotgan izohlar mavjud emas', 'Комментариев пока нет', language)
                 keyboard = student_instructor_feedback_keyboard(language) \
                     if 'author' in query else \
                     admin_feedback_keyboard(language)
             elif self.data_type in ['USER', 'ADMINS', 'INSTRUCTORS']:
 
                 if query['type'] == User.TypeChoices.ADMIN:
-                    text = "Hozircha adminlar topilmadi" \
-                        if language == option['language']['uz'] else \
-                        "Админы пока не найдены"
-
+                    text = translator("Hozircha adminlar topilmadi", "Админы пока не найдены", language)
                     keyboard = admin_keyboard(ADMIN, language)
                 elif query['type'] == User.TypeChoices.INSTRUCTOR:
-                    text = "Hozircha instruktorlar topilmadi" \
-                        if language == option['language']['uz'] else \
-                        "Инструкторы пока не найдены"
-
+                    text = translator("Hozircha instruktorlar topilmadi", "Инструкторы пока не найдены", language)
                     keyboard = admin_keyboard(INSTRUCTOR, language)
                 elif query['type'] == User.TypeChoices.STUDENT:
-                    text = "Hozircha studentlar topilmadi" \
-                        if language == option['language']['uz'] else \
-                        "Студенты пока не найдены"
-
+                    text = translator("Hozircha studentlar topilmadi", "Студенты пока не найдены", language)
                     keyboard = admin_keyboard(STUDENT, language)
 
             status = False
 
             return dict(message=text, keyboard=keyboard, status=status)
 
-        text = f'<b>Hozirgi: {offset + 1}-{len(data) + offset}, Jami: {len(all_data)}</b>\n\n' \
-            if language == option['language']['uz'] else \
-            f'<b>Текущий: {offset + 1}-{len(data) + offset}, Общий: {len(all_data)}</b>\n\n'
+        text = translator(
+            f'<b>Hozirgi: {offset + 1}-{len(data) + offset}, Jami: {len(all_data)}</b>\n\n',
+            f'<b>Текущий: {offset + 1}-{len(data) + offset}, Общий: {len(all_data)}</b>\n\n',
+            language
+        )
 
         for i, info in enumerate(data, start=1):
             callback_data = ""
 
-            if self.data_type == 'ADMINS':
+            if self.data_type == 'ADMIN':
                 callback_data = f"sadmin-{info.id}"
-            if self.data_type == 'INSTRUCTORS':
+            if self.data_type == 'INSTRUCTOR':
                 callback_data = f"sins-{info.id}"
             elif self.data_type == 'SUBJECT':
                 callback_data = f"ssubject-{info.id}"
@@ -163,16 +148,16 @@ class Pagination:
                 keyboard.row(*arr)
                 arr = []
 
-            if self.data_type in ['ADMINS', 'INSTRUCTORS']:
+            if self.data_type in ['ADMIN', 'INSTRUCTOR', 'STUDENT']:
                 text += f"<b>{i}.</b>  {info.name} - {info.telegram_id}\n"
             if self.data_type == 'ADVERTISING':
                 text += f"<b>{i}.</b> {info.title}\n"
             if self.data_type == 'TEST':
-                text += f"<b>{i}.</b> {info.question}\n"
+                text += f"<b>{i}.</b> {translator(info.question_uz, info.question_ru, language)}\n"
             elif self.data_type == 'SECTION':
-                text += f"<b>{i}.</b> {info.name}\n"
+                text += f"<b>{i}.</b> {translator(info.name_uz, info.name_ru, language)}\n"
             elif self.data_type == 'SUBJECT':
-                text += f"<b>{i}.</b> {info.name_uz if language == option['language']['uz'] else info.name_ru}\n"
+                text += f"<b>{i}.</b> {translator(info.name_uz, info.name_ru, language)}\n"
             elif self.data_type == 'FEEDBACK':
                 text += f"<b>{i}.</b> {author.name} - {info.mark}\n"
 
@@ -228,7 +213,3 @@ async def is_subscribed(bot: Bot, message: Message, CHANNEL_ID: int) -> bool:
 
 def language_definer(language):
     return 'uz' if language == option['language']['uz'] else 'ru'
-
-
-def translator(sentence_uz, sentence_ru, language):
-    return sentence_uz if language == option['language']['uz'] else sentence_ru

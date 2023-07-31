@@ -9,7 +9,7 @@ from bot.controllers import user_controller, subject_controller
 from bot.models.subject import StatusChoices
 from bot.keyboards.keyboards import admin_keyboard, one_admin_keyboard, back_keyboard, confirmation_keyboard
 from bot.keyboards.keyboard_buttons import admin, option
-from bot.helpers.utils import Pagination, is_num
+from bot.helpers.utils import Pagination, is_num, translator
 from bot.helpers.formats import subject_format
 from bot.helpers.config import SUBJECT
 from bot.states.subject import SubjectStates
@@ -22,7 +22,7 @@ from bot.states.user import UserStates
 async def admin_subjects_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.chat.id))
 
-    message_text = "Fanlar sahifasi" if user.lang == option['language']['uz'] else "Страница предметов"
+    message_text = translator("Fanlar sahifasi", "Страница предметов", user.lang)
 
     await SubjectStates.process.set()
 
@@ -129,9 +129,7 @@ async def requesting_name_handler(message: Message, state: FSMContext):
 
     await SubjectStates.name.set()
 
-    message_text = "Fanni nomini yuboring" \
-        if user.lang == option['language']['uz'] else \
-        "Отправьте название предмета"
+    message_text = translator("Fanni nomini yuboring", "Отправьте название предмета", user.lang)
 
     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
 
@@ -141,17 +139,23 @@ async def requesting_description_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
         await message.answer(error_message)
         await admin_subjects_handler(message, state)
         return
 
     if is_num(message.text):
-        message_text = "Iltimos to'g'ri nom yuboring" \
-            if user.lang == option['language']['uz'] else \
-            "Пожалуйста, отправьте правильное название"
+        error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
+        await message.answer(error_message)
+        return
 
-        await message.answer(message_text)
+    subject_query = translator(dict(name_uz=message.text), dict(name_ru=message.text), user.lang)
+    subject = await subject_controller.get_one(subject_query)
+
+    if subject:
+        error_message = translator("Bu fan bazada mavjud!", "Этот предмет существует в базе!", user.lang)
+        await SubjectStates.process.set()
+        await message.answer(error_message, reply_markup=admin_keyboard(SUBJECT, user.lang))
         return
 
     async with state.proxy() as data:
@@ -159,7 +163,7 @@ async def requesting_description_handler(message: Message, state: FSMContext):
 
     await SubjectStates.description.set()
 
-    message_text = "Fanni tavsifini yuboring" if user.lang == option['language']['uz'] else "Отправьте описание предмета"
+    message_text = translator("Fanni tavsifini yuboring", "Отправьте описание предмета", user.lang)
 
     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
 
@@ -169,17 +173,15 @@ async def checking_creation_subject_handler(message: Message, state: FSMContext)
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
         await message.answer(error_message)
         await admin_subjects_handler(message, state)
         return
 
     if is_num(message.text):
-        message_text = "Iltimos to'g'ri nom yuboring" \
-            if user.lang == option['language']['uz'] else \
-            "Пожалуйста, отправьте правильное название"
+        error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
 
-        await message.answer(message_text)
+        await message.answer(error_message)
         return
 
     state_data = await state.get_data()
@@ -199,35 +201,29 @@ async def subject_creation_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
-        message_text = "Iltimos to'g'ri nom yuboring" \
-            if user.lang == option['language']['uz'] else \
-            "Пожалуйста, отправьте правильное название"
-
-        await message.answer(message_text)
+        error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
+        await message.answer(error_message)
         return
 
     if message.text not in [
         option['confirmation']['uz'], option['confirmation']['uz'],
         option['confirmation']['ru'], option['confirmation']['ru']
     ]:
-        error_message = "Sizga taqdim etilgan ugmalardan birini bosing" \
-            if user.lang == option['language']['uz'] else \
-            "Нажмите на один из предложенных вам вариантов"
-
-        await message.answer(
-            text=error_message,
+        error_message = translator(
+            "Sizga taqdim etilgan ugmalardan birini bosing", "Нажмите на один из предложенных вам вариантов", user.lang
         )
+        await message.answer(error_message,)
         return
 
     if message.text in [option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['ru']['no']]:
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
 
         await message.answer(error_message, reply_markup=admin_keyboard(SUBJECT, user.lang))
         return
 
     data = await state.get_data()
 
-    translator_language = "ru" if user.lang == option['language']['uz'] else 'uz'
+    translator_language = translator("ru", 'uz', user.lang)
 
     translated_subject_name = GoogleTranslator(target=translator_language).translate(data['subject_name']).capitalize()
     translated_subject_description = GoogleTranslator(target=translator_language).translate(data['subject_description']).capitalize()
@@ -235,15 +231,15 @@ async def subject_creation_handler(message: Message, state: FSMContext):
     name_uz, name_ru, description_uz, description_ru = '', '', '', ''
 
     if translator_language == 'uz':
-        name_uz = data['subject_name']
-        name_ru = translated_subject_name
-        description_uz = data['subject_description']
-        description_ru = translated_subject_description
-    elif translator_language == 'ru':
         name_uz = translated_subject_name
         name_ru = data['subject_name']
         description_uz = translated_subject_description
         description_ru = data['subject_description']
+    elif translator_language == 'ru':
+        name_uz = data['subject_name']
+        name_ru = translated_subject_name
+        description_uz = data['subject_description']
+        description_ru = translated_subject_description
 
     await subject_controller.make(
         dict(name_uz=name_uz, name_ru=name_ru, description_uz=description_uz, description_ru=description_ru)
@@ -251,9 +247,6 @@ async def subject_creation_handler(message: Message, state: FSMContext):
 
     await SubjectStates.process.set()
 
-    message_text = "Yangi fan qo'shildi" if user.lang == option['language']['uz'] else "Новый предмет добавлено"
+    message_text = translator("Yangi fan qo'shildi", "Новый предмет добавлено", user.lang)
 
-    await message.answer(
-        message_text,
-        reply_markup=admin_keyboard(SUBJECT, user.lang)
-    )
+    await message.answer(message_text, reply_markup=admin_keyboard(SUBJECT, user.lang))

@@ -69,9 +69,21 @@ class Controller:
 
     async def get_pagination(self, query: dict, offset: int, limit: int, order_by_columns='') -> List:
         try:
-            return await self.process(
+            pagination = await self.process(
                 method=GET, query=query, count=ALL, is_paginating=True, data=dict(offset=offset, limit=limit)
             )
+
+            if order_by_columns:
+                pagination = await self.process(
+                    method=GET,
+                    query=query,
+                    count=ALL,
+                    is_paginating=True,
+                    data=dict(offset=offset, limit=limit),
+                    order_by_columns=order_by_columns
+                )
+
+            return pagination
         except Exception as error:
             print(error)
 

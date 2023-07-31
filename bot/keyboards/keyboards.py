@@ -225,10 +225,12 @@ def subjects_sections_keyboard(datas, language, limit=3):
     buttons, arr = [], []
 
     for data in datas:
+        print(data.__dict__)
+
         if language == option['language']['uz']:
-            arr.append(data.name_uz)
+            arr.append(KeyboardButton(data.name_uz))
         elif language == option['language']['ru']:
-            arr.append(data.name_ru)
+            arr.append(KeyboardButton(data.name_ru))
 
         if len(arr) % limit == 0:
             buttons.append(arr)
@@ -236,9 +238,9 @@ def subjects_sections_keyboard(datas, language, limit=3):
 
     buttons.append(arr)
 
-    buttons.append([option['back']['uz']]) if language == option['language']['uz'] else buttons.append([option['back']['ru']])
+    buttons.append([option['back'][language_definer(language)]])
 
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def is_subscribed_keyboard(language_code, CHANNEL_LINK) -> InlineKeyboardMarkup:
@@ -265,7 +267,7 @@ def feedback_keyboard(language):
         [KeyboardButton(option['back'][lang])]
     ]
 
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def language_keyboard(is_editing=None, language=None):

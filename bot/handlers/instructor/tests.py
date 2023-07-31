@@ -30,7 +30,7 @@ from bot.states.user import UserStates
 async def instructor_tests_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.chat.id))
 
-    message_text = translator("Testlar sahifasi", "Страница тестов", user, lang)
+    message_text = translator("Testlar sahifasi", "Страница тестов", user.lang)
 
     await TestStates.process.set()
 
@@ -49,7 +49,7 @@ async def all_tests_handler(message: Message, state: FSMContext):
         1, 6, dict(user_id=user.id, status=StatusChoices.ACTIVE), user.lang, ['subject_id', 'section_id']
     )
 
-    if not paginated['status']:
+    if paginated['status']:
         await TestStates.all_tests.set()
 
     await message.answer(text=paginated['message'], reply_markup=paginated['keyboard'])
@@ -103,7 +103,7 @@ async def get_instructor_test_handler(query: CallbackQuery, state: FSMContext):
     )
 
     await query.message.edit_text(
-        text=test_format(data, user.lang), reply_markup=one_instructor_keyboard(TEST, section.id, user.lang)
+        text=test_format(data, user.lang), reply_markup=one_instructor_keyboard(test.id, TEST, user.lang)
     )
 
 
@@ -168,12 +168,31 @@ async def delete_test_handler(query: CallbackQuery, state: FSMContext):
 
 @dp.message_handler(
     IsInstructor(),
-    text=[instructor['test']['uz']['add'], instructor['test']['ru']['add']],
+    text=[instructor['tests']['uz']['add'], instructor['tests']['ru']['add']],
     state=TestStates.process
 )
 async def requesting_subject_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
     subjects = await subject_controller.get_all(dict(status=StatusChoices.ACTIVE))
+    sections = await section_controller.get_all(dict(user_id=user.id, status=StatusChoices.ACTIVE))
+
+    if len(sections) <= 0:
+        error_message = translator(
+            "Hali bo'lim qo'shmaganingiz uchun test qo'sha olmaysiz",
+            "Вы не можете добавить тест, потому что вы еще не добавили раздел",
+            user.lang
+        )
+        await message.answer(error_message)
+        return
+
+    if len(subjects) <= 0:
+        error_message = translator(
+            "Hali fanlar qo'shilmagani uchun test qo'sha olmaysiz",
+            "Вы не можете добавить тест, потому что еще не добавлено ни одного предмета",
+            user.lang
+        )
+        await message.answer(error_message)
+        return
 
     await TestStates.subject.set()
 
@@ -216,7 +235,17 @@ async def requesting_section_handler(message: Message, state: FSMContext):
 
     await TestStates.section.set()
 
-    sections = await section_controller.get_one(dict(user_id=user.id, subject_id=subject_checking.id))
+    sections = await section_controller.get_all(
+        dict(user_id=user.id, subject_id=subject_checking.id, status=StatusChoices.ACTIVE)
+    )
+
+    if not sections:
+        error_message = translator(
+            "Hali bu fan uchun bo'lim qo'shmagansiz", "Вы еще не добавили раздел по этой теме", user.lang
+        )
+        await TestStates.process.set()
+        await message.answer(error_message, reply_markup=instructor_keyboard(TEST, user.lang))
+        return
 
     message_text = translator(
         "Qaysi bo'lim uchun test qo'shmoqchisiz", "Для какого секции вы хотите добавить тест", user.lang
@@ -225,7 +254,7 @@ async def requesting_section_handler(message: Message, state: FSMContext):
     await message.answer(message_text, reply_markup=subjects_sections_keyboard(sections, user.lang))
 
 
-@dp.message_handler(state=TestStates.section)
+@dp.message_handler(IsInstructor(), state=TestStates.section)
 async def requesting_image_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
@@ -243,7 +272,7 @@ async def requesting_image_handler(message: Message, state: FSMContext):
 
     query = translator(dict(name_uz=message.text), dict(name_ru=message.text), user.lang)
 
-    section_checking = await subject_controller.get_one(query)
+    section_checking = await section_controller.get_one(query)
 
     if not section_checking:
         error_message = translator(
@@ -266,7 +295,8 @@ async def requesting_image_handler(message: Message, state: FSMContext):
     await message.answer(message_text, reply_markup=next_keyboard(user.lang))
 
 
-@dp.message_handler(content_types=[ContentTypes.TEXT, ContentTypes.PHOTO], state=TestStates.image)
+# @dp.message_handler(IsInstructor(), content_types=[ContentTypes.PHOTO, ContentTypes.TEXT], state=TestStates.image)
+@dp.message_handler(IsInstructor(), content_types=ContentTypes.ANY, state=TestStates.image)
 async def requesting_question_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
@@ -396,15 +426,15 @@ async def checking_creation_handler(message: Message, state: FSMContext):
 
     data = await state.get_data()
 
-    subject = subject_controller.get_one(dict(id=data['test_subject']))
-    section = section_controller.get_one(dict(id=data['test_section']))
+    subject = await subject_controller.get_one(dict(id=data['test_subject']))
+    section = await section_controller.get_one(dict(id=data['test_section']))
 
     dope = dict(
         owner=user.name,
         subject=translator(subject.name_uz, subject.name_ru, user.lang),
         section=translator(section.name_uz, section.name_ru, user.lang),
         question=data['test_question'],
-        variants=data['test_variants'],
+        variants=data['test_variants'].split('\n'),
         correct_answer=message.text
     )
 
@@ -447,37 +477,37 @@ async def test_creation_handler(message: Message, state: FSMContext):
 
     variants = []
 
-    for variant in data['test_variants']:
+    for variant in data['test_variants'].split('\n'):
         translated_variant = GoogleTranslator(target=translator_language).translate(variant).capitalize()
         variants.append(translated_variant)
 
     question_uz, question_ru, correct_answer_uz, correct_answer_ru, variants_uz, variants_ru = '', '', '', '', [], []
 
     if translator_language == 'uz':
-        question_uz = data['test_question']
-        question_ru = translated_question
-        correct_answer_uz = data['subject_description']
-        correct_answer_ru = translated_correct_answer
-        variants_uz = data['test_variants']
-        variants_ru = variants
-    elif translator_language == 'ru':
-        question_uz = correct_answer_ru
+        question_uz = translated_question
         question_ru = data['test_question']
         correct_answer_uz = translated_correct_answer
-        correct_answer_ru = data['subject_description']
+        correct_answer_ru = data['test_correct_answer']
         variants_uz = variants
-        variants_ru = data['test_variants']
+        variants_ru = data['test_variants'].split('\n')
+    elif translator_language == 'ru':
+        question_uz = data['test_question']
+        question_ru = correct_answer_ru
+        correct_answer_uz = data['test_correct_answer']
+        correct_answer_ru = translated_correct_answer
+        variants_uz = data['test_variants'].split('\n')
+        variants_ru = variants
 
     if data['test_image'] != '':
         path = join(dirname(abspath(__file__)), '..', '..', '..', 'test_app', 'static', 'media', 'test_photos',
                     f'{question_uz}.jpg')
 
-        audio_file = await dp.bot.download_file_by_id(data['test_image'])
+        photo_file = await dp.bot.download_file_by_id(data['test_image'])
 
         async with aiofiles.open(path, "wb") as f:
-            await f.write(audio_file.getvalue())
+            await f.write(photo_file.getvalue())
 
-    await subject_controller.make(
+    await test_controller.make(
         dict(
             user_id=user.id,
             subject_id=data['test_subject'],

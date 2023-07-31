@@ -6,7 +6,7 @@ from deep_translator import GoogleTranslator
 from bot.loader import dp
 from bot.controllers import user_controller, section_controller, test_controller, subject_controller
 from bot.models.user import User
-from bot.models.section import Section
+from bot.models.section import Section, StatusChoices
 from bot.keyboards.keyboards import \
     instructor_keyboard, one_instructor_keyboard, subjects_sections_keyboard, confirmation_keyboard, back_keyboard
 from bot.filters.is_instructor import IsInstructor
@@ -14,7 +14,6 @@ from bot.keyboards.keyboard_buttons import instructor, option
 from bot.helpers.utils import Pagination, is_num, translator
 from bot.helpers.config import SECTION
 from bot.helpers.formats import section_format
-# from bot.helpers.settings import CORE_ADMINS
 from bot.states.section import SectionStates
 from bot.states.user import UserStates
 
@@ -44,7 +43,7 @@ async def all_sections_handler(message: Message, state: FSMContext):
 
     paginated = await Pagination(data_type="SECTION").paginate(1, 6, dict(user_id=user.id), user.lang)
 
-    if not paginated['status']:
+    if paginated['status']:
         await SectionStates.all_sections.set()
 
     await message.answer(text=paginated['message'], reply_markup=paginated['keyboard'])
@@ -79,16 +78,15 @@ async def get_instructor_section_handler(query: CallbackQuery, state: FSMContext
 
     section = await section_controller.get_one(dict(id=id))
 
-    await SectionStates.one_section.set()
+    subject = await subject_controller.get_one(dict(id=section.subject_id))
 
-    section_name = translator(section.name_uz, section.name_ru, user.lang)
-    section_description = translator(section.description_uz, section.description_ru, user.lang)
+    await SectionStates.one_section.set()
 
     data = dict(
         user=user.name,
-        subject=section.subject_id.name,
-        name=section_name,
-        description=section_description,
+        subject=translator(subject.name_uz, subject.name_ru, user.lang),
+        name=translator(section.name_uz, section.name_ru, user.lang),
+        description=translator(section.description_uz, section.description_ru, user.lang),
         total_tests=section.total_tests,
         status=section.status,
         created_at=section.created_at
@@ -123,17 +121,18 @@ async def delete_section_handler(query: CallbackQuery, state: FSMContext):
 
     section = await section_controller.get_one(dict(id=id))
 
-    tests = await section_controller.get_all(dict(section_id=section.id))
+    tests = await test_controller.get_all(dict(section_id=section.id))
 
-    for test in tests:
-        if test.is_testing:
-            error_message = translator(
-                "Hozir bo'limni o'chiraolmaysiz. Chunki test hozir yechilyabti",
-                "Вы не можете удалить раздел сейчас. Поскольку тест в настоящее время решается",
-                user.lang
-            )
-            await query.message.answer(text=error_message)
-            return
+    if tests:
+        for test in tests:
+            if test.is_testing:
+                error_message = translator(
+                    "Hozir bo'limni o'chiraolmaysiz. Chunki test hozir yechilyabti",
+                    "Вы не можете удалить раздел сейчас. Поскольку тест в настоящее время решается",
+                    user.lang
+                )
+                await query.message.answer(text=error_message)
+                return
 
     deleting = await section_controller.delete(dict(id=section.id))
 
@@ -147,11 +146,15 @@ async def delete_section_handler(query: CallbackQuery, state: FSMContext):
         await query.message.answer(text=error_message)
         return
 
-    paginated = await Pagination(data_type="SECTION").paginate(query=dict(user_id=user.id), page=1, limit=6, language=user.lang)
+    paginated = await Pagination(data_type="SECTION").paginate(1, 6, dict(user_id=user.id), user.lang)
 
-    await SectionStates.all_sections.set()
-
-    await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
+    if paginated['status']:
+        await SectionStates.all_sections.set()
+        await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
+    elif not paginated['status']:
+        await SectionStates.process.set()
+        await query.message.delete()
+        await query.message.answer(text=paginated['message'], reply_markup=paginated['keyboard'])
 
 
 @dp.message_handler(
@@ -161,7 +164,17 @@ async def delete_section_handler(query: CallbackQuery, state: FSMContext):
 )
 async def requesting_subject_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
-    subjects = await subject_controller.get_all()
+
+    subjects = await subject_controller.get_all(dict(status=StatusChoices.ACTIVE))
+
+    if len(subjects) <= 0:
+        error_message = translator(
+            "Hali fanlar qo'shilmagani uchun test qo'sha olmaysiz",
+            "Вы не можете добавить тест, потому что еще не добавлено ни одного предмета",
+            user.lang
+        )
+        await message.answer(error_message)
+        return
 
     await SectionStates.subject.set()
 
@@ -187,7 +200,7 @@ async def requesting_name_handler(message: Message, state: FSMContext):
         await instructor_sections_handler(message, state)
         return
 
-    subject_query = (dict(name_uz=message.text), dict(name_ru=message.text), user.lang)
+    subject_query = translator(dict(name_uz=message.text), dict(name_ru=message.text), user.lang)
 
     subject_checking = await subject_controller.get_one(subject_query)
 
@@ -343,7 +356,7 @@ async def section_creation_handler(message: Message, state: FSMContext):
 
     dope = dict(
         user=user.name,
-        subject=subject,
+        subject=translator(subject.name_uz, subject.name_ru, user.lang),
         name=translator(section.name_uz, section.name_ru, user.lang),
         description=translator(section.description_uz, section.description_ru, user.lang),
         total_tests=section.total_tests,

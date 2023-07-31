@@ -152,12 +152,12 @@ instructor = dict()
 instructor['pages'] = dict()
 instructor['pages']['uz'] = dict()
 instructor['pages']['uz']['settings'] = "Sozlamalar"
-instructor['pages']['uz']['sections'] = "Testlar"
+instructor['pages']['uz']['sections'] = "Bo'limlar"
 instructor['pages']['uz']['tests'] = "Testlar"
 instructor['pages']['uz']['feedback'] = "Izohlar"
 instructor['pages']['ru'] = dict()
 instructor['pages']['ru']['settings'] = "Настройки"
-instructor['pages']['ru']['sections'] = "Тесты"
+instructor['pages']['ru']['sections'] = "Секции"
 instructor['pages']['ru']['tests'] = "Тесты"
 instructor['pages']['ru']['feedback'] = "Комментарии"
 

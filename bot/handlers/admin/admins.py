@@ -33,7 +33,7 @@ async def admin_admins_handler(message: Message, state: FSMContext):
 async def all_admins_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    paginated = await Pagination("ADMINS").paginate(1, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
+    paginated = await Pagination("ADMIN").paginate(1, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
 
     if paginated['status']:
         await AdminStates.all_admins.set()
@@ -58,7 +58,7 @@ async def pagination_admins_handler(query: CallbackQuery, state: FSMContext):
 
     page = int(query.data.split("#")[2])
 
-    paginated = await Pagination("ADMINS").paginate(page, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
+    paginated = await Pagination("ADMIN").paginate(page, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
 
     await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
 
@@ -82,7 +82,7 @@ async def get_admin_handler(query: CallbackQuery, state: FSMContext):
 async def back_from_get_admin_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    paginated = await Pagination("ADMINS").paginate(1, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
+    paginated = await Pagination("ADMIN").paginate(1, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
 
     await AdminStates.all_admins.set()
 
@@ -97,7 +97,7 @@ async def delete_admin_handler(query: CallbackQuery, state: FSMContext):
 
     await user_controller.delete(dict(id=id))
 
-    paginated = await Pagination("ADMINS").paginate(1, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
+    paginated = await Pagination("ADMIN").paginate(1, 6, dict(type=User.TypeChoices.ADMIN), user.lang)
 
     if not paginated['status']:
         await AdminStates.process.set()
