@@ -6,7 +6,8 @@ from bot.filters.is_not_admin import IsNotAdmin
 from bot.controllers import user_controller, feedback_controller
 from bot.models.feedback import StatusChoices
 from bot.helpers.formats import feedback_all_format
-from bot.keyboards.keyboard_buttons import option, instructor
+from bot.helpers.utils import translator
+from bot.keyboards.keyboard_buttons import option, instructor, all
 from bot.keyboards.keyboards import student_instructor_feedback_keyboard, feedback_keyboard, back_keyboard
 from bot.states.feedback import FeedbackStates
 from bot.states.user import UserStates
@@ -18,9 +19,9 @@ from bot.states.user import UserStates
     state=UserStates.process
 )
 async def student_instructor_feedback_handler(message: Message, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
+    user = await user_controller.get_one(dict(telegram_id=message.chat.id))
 
-    message_text = "Izohlar bo'limi" if user.lang == option['language']['uz'] else "Страница комментарии"
+    message_text = translator("Izohlar bo'limi", "Страница комментарии", user.lang)
 
     await FeedbackStates.process.set()
 
@@ -29,14 +30,13 @@ async def student_instructor_feedback_handler(message: Message, state: FSMContex
 
 @dp.message_handler(
     IsNotAdmin(),
-    text=[instructor['feedback']['uz']['add'], instructor['feedback']['ru']['add']],
+    text=[all['feedback']['uz']['add'], all['feedback']['ru']['add']],
     state=FeedbackStates.process
 )
 async def add_student_instructor_feedback_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    message_text = "Biz haqimizda nima deb o'ylaysiz" if user.lang == option['language'][
-        'uz'] else "Что вы думаете о нас"
+    message_text = translator("Biz haqimizda nima deb o'ylaysiz", "Что вы думаете о нас", user.lang)
 
     await FeedbackStates.mark.set()
 
@@ -48,7 +48,7 @@ async def requesting_student_instructor_feedback_reason_handler(message: Message
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
 
         await message.answer(error_message)
         await student_instructor_feedback_handler(message, state)
@@ -58,16 +58,16 @@ async def requesting_student_instructor_feedback_reason_handler(message: Message
         option['feedback']['uz']['good'], option['feedback']['uz']['bad'],
         option['feedback']['ru']['good'], option['feedback']['ru']['bad']
     ]:
-        error_message = "Sizga berilgan 2 tugmadan birini bosing" \
-            if user.lang == option['language']['uz'] else \
-            "Нажмите одну из двух кнопок, данных вам"
+        error_message = translator(
+            "Sizga berilgan 2 tugmadan birini bosing", "Нажмите одну из двух кнопок, данных вам", user.lang
+        )
 
         await message.answer(error_message)
         return
 
-    message_text = f"Nega {message.text} ligini sababini yozing" \
-        if user.lang == option['language']['uz'] else \
-        f"Напишите причину, по которой {message.text}"
+    message_text = translator(
+        f"Nega {message.text} ligini sababini yozing", f"Напишите причину, по которой {message.text}", user.lang
+    )
 
     async with state.proxy() as data:
         data['user_feedback_mark'] = message.text
@@ -84,15 +84,13 @@ async def creation_student_instructor_feedback_handler(message: Message, state: 
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
 
         await message.answer(error_message)
         await student_instructor_feedback_handler(message, state)
         return
 
-    message_text = "Izohingiz muvaffaqiyatli qoldirildi" \
-        if user.lang == option['language']['uz'] else \
-        "Ваш комментарий успешно отправлен."
+    message_text = translator("Izohingiz muvaffaqiyatli qoldirildi", "Ваш комментарий успешно отправлен.", user.lang)
 
     await feedback_controller.make(dict(user_id=user.id, mark=data['user_feedback_mark'], reason=message.text))
 
@@ -103,7 +101,7 @@ async def creation_student_instructor_feedback_handler(message: Message, state: 
 
 @dp.message_handler(
     IsNotAdmin(),
-    text=[instructor['feedback']['uz']['my_feedback'], instructor['feedback']['ru']['my_feedback']],
+    text=[all['feedback']['uz']['my_feedback'], all['feedback']['ru']['my_feedback']],
     state=FeedbackStates.process
 )
 async def all_student_instructor_feedback_handler(message: Message, state: FSMContext):
@@ -112,10 +110,7 @@ async def all_student_instructor_feedback_handler(message: Message, state: FSMCo
     count = await feedback_controller.count(dict(user_id=user.id))
 
     if count < 0:
-        error_message = "Hozircha siz izoh qoldirmagansiz" \
-            if user.lang == option['language']['uz'] else \
-            "Вы еще не оставили комментарий"
-
+        error_message = translator("Hozircha siz izoh qoldirmagansiz", "Вы еще не оставили комментарий", user.lang)
         await message.answer(error_message)
         return
 

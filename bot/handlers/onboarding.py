@@ -1,11 +1,10 @@
 from aiogram.types import CallbackQuery
 from aiogram.dispatcher import FSMContext
-from sqlalchemy import and_
 from bot.loader import bot, dp
 from bot.controllers import user_controller
 from bot.models.user import User
 from bot.helpers.config import CHANNEL_ID, languages_uz, IS_SUBSCRIBED
-from bot.helpers.utils import is_subscribed
+from bot.helpers.utils import is_subscribed, translator
 from bot.helpers.formats import introduction_format
 from bot.keyboards.keyboard_buttons import option
 from bot.keyboards.keyboards import instructor_pages_keyboard, student_pages_keyboard, language_keyboard
@@ -28,7 +27,7 @@ async def check_is_subscribed(query: CallbackQuery, state: FSMContext):
 
     await query.message.delete()
 
-    message_text, keyboard = 'Bosh sahifa' if option['language']['uz'] else 'Домашняя страница', []
+    message_text, keyboard = translator('Bosh sahifa', 'Домашняя страница', user.lang), []
 
     if user.type == User.TypeChoices.STUDENT:
         await UserStates.process.set()

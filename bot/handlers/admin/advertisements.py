@@ -12,7 +12,7 @@ from bot.controllers import user_controller, advertising_controller
 from bot.models.advertising import StatusChoices
 from bot.filters.is_admin import IsAdmin
 from bot.helpers.formats import advertising_format, advertising_number_format
-from bot.helpers.utils import Pagination
+from bot.helpers.utils import Pagination, translator
 from bot.keyboards.keyboard_buttons import admin, option
 from bot.keyboards.keyboards import (
     admin_advertisements_keyboard,
@@ -30,10 +30,11 @@ from bot.states.user import UserStates
     state=UserStates.process
 )
 async def admin_advertisements_handler(message: Message, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
+    user = await user_controller.get_one(dict(telegram_id=message.chat.id))
+
     await AdvertisingStates.process.set()
 
-    message_text = "Reklamalar bo'limi" if user.lang == option['language']['uz'] else "Рекламный отдел"
+    message_text = translator("Reklamalar bo'limi", "Рекламный отдел", user.lang)
 
     await message.answer(message_text, reply_markup=admin_advertisements_keyboard(user.lang))
 
@@ -101,6 +102,8 @@ async def one_advertising_handler(query: CallbackQuery, state: FSMContext):
 
     advertising = await advertising_controller.get_one(dict(id=id))
 
+    dope = dict(title=advertising.title, description=advertising.description)
+
     await AdvertisingStates.one_advertising.set()
 
     await query.message.delete()
@@ -108,7 +111,7 @@ async def one_advertising_handler(query: CallbackQuery, state: FSMContext):
     async with aiofiles.open(advertising.file, 'rb') as file:
         await query.message.answer_photo(
             file,
-            caption=advertising_format(advertising, user.lang),
+            caption=advertising_format(dope, user.lang),
             reply_markup=one_advertising_keyboard(id, user.lang)
         )
 
@@ -140,11 +143,13 @@ async def send_advertising_to_all_handler(query: CallbackQuery, state: FSMContex
 
     advertising = await advertising_controller.get_one(dict(id=id))
 
+    dope = dict(title=advertising.title, description=advertising.description)
+
     users = await user_controller.get_all(dict(status=StatusChoices.ACTIVE))
 
     for user in users:
         async with aiofiles.open(advertising.file, 'rb') as image:
-            await dp.bot.send_photo(user.telegram_id, image, advertising_format(advertising, user.lang))
+            await dp.bot.send_photo(user.telegram_id, image, advertising_format(dope, user.lang))
 
     await AdvertisingStates.all_advertisements.set()
 
@@ -157,7 +162,7 @@ async def send_advertising_to_all_handler(query: CallbackQuery, state: FSMContex
 
     await query.message.answer(paginated['message'], reply_markup=paginated['keyboard'])
 
-    message_text = "Reklama barchaga yuborildi" if user.lang == option['language']['uz'] else "Объявление отправлено всем"
+    message_text = translator("Reklama barchaga yuborildi", "Объявление отправлено всем", user.lang)
 
     await query.message.answer(message_text)
 
@@ -181,7 +186,7 @@ async def delete_advertising_handler(query: CallbackQuery, state: FSMContext):
     if not paginated['status']:
         await AdvertisingStates.process.set()
 
-    message_text = "Reklama o'chirildi" if user.lang == option['language']['uz'] else "Объявление удалено"
+    message_text = translator("Reklama o'chirildi", "Объявление удалено", user.lang)
 
     await query.message.answer(message_text)
 
@@ -197,14 +202,8 @@ async def requesting_advertising_image_handler(message: Message, state: FSMConte
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
     await AdvertisingStates.image.set()
 
-    message_1, message_2 = '', ''
-
-    if user.lang == option['language']['uz']:
-        message_1 = "Reklama joylashga hush kelibsiz"
-        message_2 = "Reklamani rasmini jo'nating"
-    elif user.lang == option['language']['uz']:
-        message_1 = "Вы можете разместить объявление"
-        message_2 = "Отправьте фото объявления"
+    message_1 = translator("Reklama joylashga hush kelibsiz", "Вы можете разместить объявление", user.lang)
+    message_2 = translator("Reklamani rasmini jo'nating", "Отправьте фото объявления", user.lang)
 
     await message.answer(message_1)
     await message.answer(message_2, reply_markup=back_keyboard(user.lang))
@@ -216,7 +215,7 @@ async def requesting_advertising_title_handler(message: Message, state: FSMConte
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         await AdvertisingStates.process.set()
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
         await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
@@ -230,9 +229,7 @@ async def requesting_advertising_title_handler(message: Message, state: FSMConte
     async with state.proxy() as data:
         data['advertising_image'] = message.photo[0].file_id
 
-    message_text = "Reklamaning sarlavhasini kiriting" \
-        if user.lang == option['language']['uz'] else \
-        "Введите название объявления"
+    message_text = translator("Reklamaning sarlavhasini kiriting", "Введите название объявления", user.lang)
 
     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
 
@@ -243,16 +240,14 @@ async def requesting_advertising_description_handler(message: Message, state: FS
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         await AdvertisingStates.process.set()
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
         await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
     async with state.proxy() as data:
         data['advertising_title'] = message.text
 
-    message_text = "Reklamaning tavsifini kiriting" \
-        if user.lang == option['language']['uz'] else \
-        "Введите описание объявления"
+    message_text = translator("Reklamaning tavsifini kiriting", "Введите описание объявления", user.lang)
 
     await AdvertisingStates.description.set()
     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
@@ -264,7 +259,7 @@ async def check_advertising_creation_handler(message: Message, state: FSMContext
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         await AdvertisingStates.process.set()
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
         await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
@@ -292,9 +287,9 @@ async def advertising_creation_handler(message: Message, state: FSMContext):
         option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['uz']['yes'],
         option['confirmation_advertising']['ru']['no'], option['confirmation_advertising']['ru']['yes']
     ]:
-        error_message = "Sizga taqdim etilgan ugmalardan birini bosing" \
-            if user.lang == option['language']['uz'] else \
-            "Нажмите на один из предложенных вам вариантов"
+        error_message = translator(
+            "Sizga taqdim etilgan ugmalardan birini bosing", "Нажмите на один из предложенных вам вариантов", user.lang
+        )
 
         await message.answer(
             text=error_message,
@@ -305,7 +300,7 @@ async def advertising_creation_handler(message: Message, state: FSMContext):
     if message.text in [option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['ru']['no']]:
         await AdvertisingStates.process.set()
 
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
         await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 

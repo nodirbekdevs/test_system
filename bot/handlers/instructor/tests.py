@@ -15,7 +15,7 @@ from bot.keyboards.keyboards import instructor_keyboard, one_instructor_keyboard
     confirmation_keyboard, next_keyboard, back_keyboard
 from bot.filters.is_instructor import IsInstructor
 from bot.keyboards.keyboard_buttons import instructor, option
-from bot.helpers.utils import Pagination, is_num
+from bot.helpers.utils import Pagination, is_num, translator
 from bot.helpers.formats import test_format
 from bot.helpers.config import TEST
 from bot.states.test import TestStates
@@ -28,9 +28,9 @@ from bot.states.user import UserStates
     state=UserStates.process
 )
 async def instructor_tests_handler(message: Message, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
+    user = await user_controller.get_one(dict(telegram_id=message.chat.id))
 
-    message_text = "Testlar sahifasi" if user.lang == option['language']['uz'] else "Страница тестов"
+    message_text = translator("Testlar sahifasi", "Страница тестов", user, lang)
 
     await TestStates.process.set()
 
@@ -57,13 +57,8 @@ async def all_tests_handler(message: Message, state: FSMContext):
 
 @dp.callback_query_handler(IsInstructor(), lambda query: query.data == "delete", state=TestStates.all_tests)
 async def back_from_all_tests_handler(query: CallbackQuery, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
-
-    message_text = "Testlar sahifasi" if user.lang == option['language']['uz'] else "Страница тестов"
-
-    await TestStates.process.set()
-
-    await query.message.edit_text(message_text, reply_markup=instructor_keyboard(TEST, user.lang))
+    await query.message.delete()
+    await instructor_tests_handler(query.message, state)
 
 
 @dp.callback_query_handler(
@@ -98,11 +93,11 @@ async def get_instructor_test_handler(query: CallbackQuery, state: FSMContext):
 
     data = dict(
         owner=user.name,
-        subject=subject.name,
-        section=section.name,
-        question=test.question,
-        variants=test.variants,
-        correct_answer=test.correct_answer,
+        subject=translator(subject.name_uz, subject.name_ru, user.lang),
+        section=translator(section.name_uz, section.name_ru, user.lang),
+        question=translator(test.question_uz, test.question_ru, user.lang),
+        variants=translator(test.variants_uz, test.variants_ru, user.lang),
+        correct_answer=translator(test.correct_answer_uz, test.correct_answer_ru, user.lang),
         status=test.status,
         created_at=test.created_at
     )
@@ -139,20 +134,22 @@ async def delete_test_handler(query: CallbackQuery, state: FSMContext):
     test = await test_controller.get_one(dict(id=id))
 
     if test.is_testing:
-        error_message = "Hozir testni o'chiraolmaysiz chunki test yechilyabdi." \
-            if user.lang == option['language']['uz'] else \
-            "Вы не можете удалить тест сейчас, потому что тест решается."
-
+        error_message = translator(
+            "Hozir testni o'chiraolmaysiz chunki test yechilyabdi.",
+            "Вы не можете удалить тест сейчас, потому что тест решается.",
+            user.lang
+        )
         await query.message.answer(text=error_message)
         return
 
     deleting = await test_controller.delete(dict(id=test.id))
 
     if not deleting:
-        error_message = "Nimadir noto'g'ri bajarildi. Bir ozdan so'ng harakat qilib ko'ring." \
-            if user.lang == option['language']['uz'] else \
-            "Что-то пошло не так. Попробуйте позже."
-
+        error_message = translator(
+            "Nimadir noto'g'ri bajarildi. Bir ozdan so'ng harakat qilib ko'ring.",
+            "Что-то пошло не так. Попробуйте позже.",
+            user.lang
+        )
         await query.message.answer(text=error_message)
         return
 
@@ -180,9 +177,9 @@ async def requesting_subject_handler(message: Message, state: FSMContext):
 
     await TestStates.subject.set()
 
-    message_text = "Qaysi fan uchun test qo'shmoqchisiz" \
-        if user.lang == option['language']['uz'] else \
-        "Для какого предмета вы хотите добавить тест"
+    message_text = translator(
+        "Qaysi fan uchun test qo'shmoqchisiz", "Для какого предмета вы хотите добавить тест", user.lang
+    )
 
     await message.answer(text=message_text, reply_markup=subjects_sections_keyboard(subjects, user.lang, 3))
 
@@ -192,26 +189,25 @@ async def requesting_section_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
-        error_message = "Raqam jo'natmang!" if user.lang == option['language']['uz'] else "Не присылайте номер!"
+        error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
         await message.answer(error_message)
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user['lang'] == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
 
         await message.answer(error_message)
         await instructor_tests_handler(message, state)
         return
 
-    query = dict(name_uz=message.text) if user.lang == option['language']['uz'] else dict(name_ru=message.text)
+    query = translator(dict(name_uz=message.text), dict(name_ru=message.text), user.lang)
 
     subject_checking = await subject_controller.get_one(query)
 
     if not subject_checking:
-        error_message = "Berilgan fanlardan birini tanlang" \
-            if user.lang == option['language']['uz'] else \
-            "Выберите один из предложенных предметов"
-
+        error_message = translator(
+            "Berilgan fanlardan birini tanlang", "Выберите один из предложенных предметов", user.lang
+        )
         await message.answer(error_message)
         return
 
@@ -222,9 +218,9 @@ async def requesting_section_handler(message: Message, state: FSMContext):
 
     sections = await section_controller.get_one(dict(user_id=user.id, subject_id=subject_checking.id))
 
-    message_text = "Qaysi bo'lim uchun test qo'shmoqchisiz" \
-        if user.lang == option['language']['uz'] else \
-        "Для какого секции вы хотите добавить тест"
+    message_text = translator(
+        "Qaysi bo'lim uchun test qo'shmoqchisiz", "Для какого секции вы хотите добавить тест", user.lang
+    )
 
     await message.answer(message_text, reply_markup=subjects_sections_keyboard(sections, user.lang))
 
@@ -234,26 +230,25 @@ async def requesting_image_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
-        error_message = "Raqam jo'natmang!" if user.lang == option['language']['uz'] else "Не присылайте номер!"
+        error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
         await message.answer(error_message)
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user['lang'] == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
 
         await message.answer(error_message)
         await instructor_tests_handler(message, state)
         return
 
-    section_query = dict(name_uz=message.text) if user.lang == option['language']['uz'] else dict(name_ru=message.text)
+    query = translator(dict(name_uz=message.text), dict(name_ru=message.text), user.lang)
 
-    section_checking = await subject_controller.get_one(section_query)
+    section_checking = await subject_controller.get_one(query)
 
     if not section_checking:
-        error_message = "Berilgan fanlardan birini tanlang" \
-            if user.lang == option['language']['uz'] else \
-            "Выберите один из предложенных предметов"
-
+        error_message = translator(
+            "Berilgan fanlardan birini tanlang", "Выберите один из предложенных предметов", user.lang
+        )
         await message.answer(error_message)
         return
 
@@ -262,9 +257,11 @@ async def requesting_image_handler(message: Message, state: FSMContext):
 
     await TestStates.image.set()
 
-    message_text = "Test uchun rasm yuboring. Test uchun rasm kerak bo'lmasa keyingi tugmasini bosing" \
-        if user.lang == option['language']['uz'] else \
-        "Присылайте фото на пробу. Если вам не нужно изображение для теста, нажмите кнопку «Далее»"
+    message_text = translator(
+        "Test uchun rasm yuboring. Test uchun rasm kerak bo'lmasa keyingi tugmasini bosing",
+        "Присылайте фото на пробу. Если вам не нужно изображение для теста, нажмите кнопку «Далее»",
+        user.lang
+    )
 
     await message.answer(message_text, reply_markup=next_keyboard(user.lang))
 
@@ -273,7 +270,7 @@ async def requesting_image_handler(message: Message, state: FSMContext):
 async def requesting_question_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    message_text = "Test savolini yuboring" if user.lang == option['language']['uz'] else "Отправьте вопрос теста"
+    message_text = translator("Test savolini yuboring", "Отправьте вопрос теста", user.lang)
 
     path = join(dirname(abspath(__file__)), '..', '..', '..', 'test_app', 'static', 'media', 'test_photos')
 
@@ -282,12 +279,12 @@ async def requesting_question_handler(message: Message, state: FSMContext):
 
     if message.text:
         if is_num(message.text):
-            error_message = "Raqam jo'natmang!" if user.lang == option['language']['uz'] else "Не присылайте номер!"
+            error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
             await message.answer(error_message)
             return
 
         if message.text in [option['back']['uz'], option['back']['ru']]:
-            error_message = "Bekor qilindi" if user['lang'] == option['language']['uz'] else "Отменено"
+            error_message = translator("Bekor qilindi", "Отменено", user.lang)
 
             await message.answer(error_message)
             await instructor_tests_handler(message, state)
@@ -300,6 +297,7 @@ async def requesting_question_handler(message: Message, state: FSMContext):
                 data['test_image'] = ''
 
             await message.answer(message_text, reply_markup=back_keyboard(user.lang))
+            return
 
     await TestStates.question.set()
 
@@ -314,12 +312,12 @@ async def requesting_variants_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
-        error_message = "Raqam jo'natmang!" if user.lang == option['language']['uz'] else "Не присылайте номер!"
+        error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
         await message.answer(error_message)
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user['lang'] == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
 
         await message.answer(error_message)
         await instructor_tests_handler(message, state)
@@ -330,11 +328,20 @@ async def requesting_variants_handler(message: Message, state: FSMContext):
     async with state.proxy() as data:
         data['test_question'] = message.text
 
-    message_text = (
-        "Variantlarni ketma ket qator tashlab yozing. Masalan:\n"
-        "\nAlisher Navoiy\n"
-        "Amir Temur\n"
-        "\nVariantlar 1 tadan ko'p bo'lishi kerak"
+    message_text = translator(
+        (
+            "Variantlarni ketma ket qator tashlab yozing. Masalan:\n"
+            "\nAlisher Navoiy\n"
+            "Amir Temur\n"
+            "\nVariantlar 1 tadan ko'p bo'lishi kerak"
+        ),
+        (
+            "Введите параметры в последовательных строках. Например:\n"
+            "\nАлишер Навоий\n"
+            "Амир Темур\n"
+            "\nВариантов должно быть больше 1"
+        ),
+        user.lang
     )
 
     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
@@ -345,12 +352,12 @@ async def requesting_correct_answer_handler(message: Message, state: FSMContext)
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
-        error_message = "Raqam jo'natmang!" if user.lang == option['language']['uz'] else "Не присылайте номер!"
+        error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
         await message.answer(error_message)
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user['lang'] == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
 
         await message.answer(error_message)
         await instructor_tests_handler(message, state)
@@ -361,9 +368,7 @@ async def requesting_correct_answer_handler(message: Message, state: FSMContext)
     async with state.proxy() as data:
         data['test_variants'] = message.text
 
-    message_text = "Testning to'g'ri javobini yuboring" \
-        if user.lang == option['language']['uz'] else \
-        "Отправьте правильный ответ на тест"
+    message_text = translator("Testning to'g'ri javobini yuboring", "Отправьте правильный ответ на тест", user.lang)
 
     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
 
@@ -373,12 +378,12 @@ async def checking_creation_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
-        error_message = "Raqam jo'natmang!" if user.lang == option['language']['uz'] else "Не присылайте номер!"
+        error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
         await message.answer(error_message)
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user['lang'] == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
 
         await message.answer(error_message)
         await instructor_tests_handler(message, state)
@@ -396,8 +401,8 @@ async def checking_creation_handler(message: Message, state: FSMContext):
 
     dope = dict(
         owner=user.name,
-        subject=subject.name_uz if option['language']['uz'] else subject.name_ru,
-        section=section.name_uz if option['language']['uz'] else section.name_ru,
+        subject=translator(subject.name_uz, subject.name_ru, user.lang),
+        section=translator(section.name_uz, section.name_ru, user.lang),
         question=data['test_question'],
         variants=data['test_variants'],
         correct_answer=message.text
@@ -411,35 +416,29 @@ async def test_creation_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if is_num(message.text):
-        message_text = "Iltimos raqam yuboring" \
-            if user.lang == option['language']['uz'] else \
-            "Пожалуйста, отправьте число"
-
-        await message.answer(message_text)
+        error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
+        await message.answer(error_message)
         return
 
     if message.text not in [
         option['confirmation']['uz'], option['confirmation']['uz'],
         option['confirmation']['ru'], option['confirmation']['ru']
     ]:
-        error_message = "Sizga taqdim etilgan ugmalardan birini bosing" \
-            if user.lang == option['language']['uz'] else \
-            "Нажмите на один из предложенных вам вариантов"
-
-        await message.answer(
-            text=error_message,
+        error_message = translator(
+            "Sizga taqdim etilgan ugmalardan birini bosing", "Нажмите на один из предложенных вам вариантов", user.lang
         )
+        await message.answer(error_message)
         return
 
     if message.text in [option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['ru']['no']]:
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
 
         await message.answer(error_message, reply_markup=instructor_keyboard(TEST, user.lang))
         return
 
     data = await state.get_data()
 
-    translator_language = "ru" if user.lang == option['language']['uz'] else 'uz'
+    translator_language = translator("ru", 'uz', user.lang)
 
     translated_question = GoogleTranslator(target=translator_language).translate(data['test_question']).capitalize()
     translated_correct_answer = GoogleTranslator(target=translator_language).translate(
@@ -503,9 +502,6 @@ async def test_creation_handler(message: Message, state: FSMContext):
 
     await TestStates.process.set()
 
-    message_text = "Yangi test qo'shildi" if user.lang == option['language']['uz'] else "Новый предмет тест"
+    message_text = translator("Yangi test qo'shildi", "Новый предмет тест", user.lang)
 
-    await message.answer(
-        message_text,
-        reply_markup=instructor_keyboard(TEST, user.lang)
-    )
+    await message.answer(message_text, reply_markup=instructor_keyboard(TEST, user.lang))

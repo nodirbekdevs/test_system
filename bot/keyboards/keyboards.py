@@ -3,28 +3,27 @@ from bot.helpers.config import IS_SUBSCRIBED, ADMIN, SECTION, TEST, INSTRUCTOR, 
 from bot.keyboards.keyboard_buttons import admin, instructor, student, option, all
 
 
+def language_definer(language):
+    return 'uz' if language == option['language']['uz'] else 'ru'
+
+
 def admin_pages_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(admin['pages']['uz']['settings']), KeyboardButton(admin['pages']['uz']['admins'])],
-        [KeyboardButton(admin['pages']['uz']['instructors']), KeyboardButton(admin['pages']['uz']['students'])],
-        [KeyboardButton(admin['pages']['uz']['subjects']), KeyboardButton(admin['pages']['uz']['advertisements'])],
-        [KeyboardButton(admin['pages']['uz']['feedback'])]
-    ]
+    lang = language_definer(language)
 
-    ru_buttons = [
-        [KeyboardButton(admin['pages']['ru']['settings']), KeyboardButton(admin['pages']['ru']['admins'])],
-        [KeyboardButton(admin['pages']['ru']['instructors']), KeyboardButton(admin['pages']['ru']['students'])],
-        [KeyboardButton(admin['pages']['ru']['subjects']), KeyboardButton(admin['pages']['ru']['advertisements'])],
-        [KeyboardButton(admin['pages']['ru']['feedback'])]
+    buttons = [
+        [KeyboardButton(admin['pages'][lang]['settings']), KeyboardButton(admin['pages'][lang]['admins'])],
+        [KeyboardButton(admin['pages'][lang]['instructors']), KeyboardButton(admin['pages'][lang]['students'])],
+        [KeyboardButton(admin['pages'][lang]['subjects']), KeyboardButton(admin['pages'][lang]['advertisements'])],
+        [KeyboardButton(admin['pages'][lang]['feedback'])]
     ]
-
-    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def admin_keyboard(section_type, language):
     section = ''
+
+    lang = language_definer(language)
 
     if section_type == ADMIN:
         section = 'admins'
@@ -36,8 +35,8 @@ def admin_keyboard(section_type, language):
         section = 'students'
 
     buttons = [
-        [KeyboardButton(admin[section][language]['all']), KeyboardButton(admin[section][language]['add'])],
-        [KeyboardButton(option['main'][language])]
+        [KeyboardButton(admin[section][lang]['all']), KeyboardButton(admin[section][lang]['add'])],
+        [KeyboardButton(option['main'][lang])]
     ]
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
@@ -71,19 +70,13 @@ def one_admin_keyboard(user_id, language, data_type: str = ADMIN):
 
 
 def admin_feedback_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(admin['feedback']['uz']['number'])],
-        [KeyboardButton(admin['feedback']['uz']['read']), KeyboardButton(admin['feedback']['uz']['doing'])],
-        [KeyboardButton(option['main']['uz'])]
-    ]
+    lang = language_definer(language)
 
-    ru_buttons = [
-        [KeyboardButton(admin['feedback']['uz']['number'])],
-        [KeyboardButton(admin['feedback']['uz']['read']), KeyboardButton(admin['feedback']['uz']['doing'])],
-        [KeyboardButton(option['main']['uz'])]
+    buttons = [
+        [KeyboardButton(admin['feedback'][lang]['number'])],
+        [KeyboardButton(admin['feedback'][lang]['read']), KeyboardButton(admin['feedback'][lang]['doing'])],
+        [KeyboardButton(option['main'][lang])]
     ]
-
-    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
@@ -117,34 +110,21 @@ def one_feedback_keyboard(feedback_id, feedback_type, language, feedback_mark = 
 
 
 def admin_advertisements_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(admin['advertisements']['uz']['number'])],
-        [KeyboardButton(admin['advertisements']['uz']['all']), KeyboardButton(admin['advertisements']['uz']['add'])],
-        [KeyboardButton(option['main']['uz'])]
-    ]
+    lang = language_definer(language)
 
-    ru_buttons = [
-        [KeyboardButton(admin['advertisements']['uz']['number'])],
-        [KeyboardButton(admin['advertisements']['uz']['all']), KeyboardButton(admin['advertisements']['uz']['add'])],
-        [KeyboardButton(option['main']['uz'])]
+    buttons = [
+        [KeyboardButton(admin['advertisements'][lang]['number'])],
+        [KeyboardButton(admin['advertisements'][lang]['all']), KeyboardButton(admin['advertisements'][lang]['add'])],
+        [KeyboardButton(option['main'][lang])]
     ]
-
-    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def one_advertising_keyboard(id, language):
-    send_ad, delete_ad, back = "", "", ""
+    lang = language_definer(language)
 
-    if language == option['language']['uz']:
-        send_ad = option['send_advertise']['uz']
-        delete_ad = option['delete_advertise']['uz']
-        back = option['back']['uz']
-    elif language == option['language']['ru']:
-        send_ad = option['send_advertise']['ru']
-        delete_ad = option['delete_advertise']['ru']
-        back = option['back']['ru']
+    send_ad, delete_ad, back = option['send_advertise'][lang], option['delete_advertise'][lang], option['back'][lang]
 
     buttons = [
         [InlineKeyboardButton(text=send_ad, callback_data=f'send_ad.{id}')],
@@ -156,58 +136,42 @@ def one_advertising_keyboard(id, language):
 
 
 def settings_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(all['settings']['uz']['name']), KeyboardButton(all['settings']['uz']['number'])],
-        [KeyboardButton(all['settings']['uz']['lang'])],
-        [KeyboardButton(option['main']['uz'])]
-    ]
+    lang = language_definer(language)
 
-    ru_buttons = [
-        [KeyboardButton(all['settings']['ru']['name']), KeyboardButton(all['settings']['ru']['number'])],
-        [KeyboardButton(all['settings']['ru']['lang'])],
-        [KeyboardButton(option['main']['ru'])]
+    buttons = [
+        [KeyboardButton(all['settings'][lang]['name']), KeyboardButton(all['settings'][lang]['number'])],
+        [KeyboardButton(all['settings'][lang]['lang'])],
+        [KeyboardButton(option['main'][lang])]
     ]
-
-    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def instructor_pages_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(instructor['pages']['uz']['settings']), KeyboardButton(instructor['pages']['uz']['feedback'])],
-        [KeyboardButton(instructor['pages']['uz']['sections']), KeyboardButton(instructor['pages']['uz']['tests'])]
+    lang = language_definer(language)
+
+    buttons = [
+        [KeyboardButton(instructor['pages'][lang]['settings']), KeyboardButton(instructor['pages'][lang]['feedback'])],
+        [KeyboardButton(instructor['pages'][lang]['sections']), KeyboardButton(instructor['pages'][lang]['tests'])]
     ]
 
-    ru_buttons = [
-        [KeyboardButton(instructor['pages']['ru']['settings']), KeyboardButton(instructor['pages']['ru']['feedback'])],
-        [KeyboardButton(instructor['pages']['ru']['sections']), KeyboardButton(instructor['pages']['ru']['tests'])]
-    ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def instructor_keyboard(section_type, language):
     section = ''
+
+    lang = language_definer(language)
 
     if section_type == SECTION:
         section = 'sections'
     elif section_type == TEST:
         section = 'tests'
 
-    uz_buttons = [
-        [KeyboardButton(instructor[section]['uz']['all']), KeyboardButton(instructor[section]['uz']['add'])],
-        [KeyboardButton(option['main']['uz'])]
+    buttons = [
+        [KeyboardButton(instructor[section][lang]['all']), KeyboardButton(instructor[section][lang]['add'])],
+        [KeyboardButton(option['main'][lang])]
     ]
-
-    ru_buttons = [
-        [KeyboardButton(instructor[section]['ru']['all']), KeyboardButton(instructor[section]['ru']['add'])],
-        [KeyboardButton(option['main']['ru'])]
-    ]
-
-    buttons = uz_buttons if language == option['languages']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
@@ -236,35 +200,25 @@ def one_instructor_keyboard(section_id, data_type, language):
 
 
 def student_pages_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(instructor['pages']['uz']['settings']), KeyboardButton(instructor['pages']['uz']['feedback'])],
-        [KeyboardButton(instructor['pages']['uz']['tests'])]
+    lang = language_definer(language)
+
+    buttons = [
+        [KeyboardButton(instructor['pages'][lang]['settings']), KeyboardButton(instructor['pages'][lang]['feedback'])],
+        [KeyboardButton(instructor['pages'][lang]['tests'])]
     ]
 
-    ru_buttons = [
-        [KeyboardButton(instructor['pages']['ru']['settings']), KeyboardButton(instructor['pages']['ru']['feedback'])],
-        [KeyboardButton(instructor['pages']['ru']['tests'])]
-    ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def student_instructor_feedback_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(all['feedback']['uz']['add']), KeyboardButton(all['feedback']['uz']['my_feedback'])],
-        [KeyboardButton(option['main']['uz'])]
+    lang = language_definer(language)
+
+    buttons = [
+        [KeyboardButton(all['feedback'][lang]['add']), KeyboardButton(all['feedback'][lang]['my_feedback'])],
+        [KeyboardButton(option['main'][lang])]
     ]
 
-    ru_buttons = [
-        [KeyboardButton(all['feedback']['ru']['add']), KeyboardButton(all['feedback']['ru']['my_feedback'])],
-        [KeyboardButton(option['main']['ru'])]
-    ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def subjects_sections_keyboard(datas, language, limit=3):
@@ -304,40 +258,33 @@ def is_subscribed_keyboard(language_code, CHANNEL_LINK) -> InlineKeyboardMarkup:
 
 
 def feedback_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(option['feedback']['uz']['good']), KeyboardButton(option['feedback']['uz']['bad'])],
-        [KeyboardButton(option['back']['uz'])]
-    ]
+    lang = language_definer(language)
 
-    ru_buttons = [
-        [KeyboardButton(option['feedback']['ru']['good']), KeyboardButton(option['feedback']['ru']['bad'])],
-        [KeyboardButton(option['back']['ru'])]
+    buttons = [
+        [KeyboardButton(option['feedback'][lang]['good']), KeyboardButton(option['feedback'][lang]['bad'])],
+        [KeyboardButton(option['back'][lang])]
     ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
 
 
 def language_keyboard(is_editing=None, language=None):
+    lang = language_definer(language)
+
     buttons = [[KeyboardButton(option['language']['uz']), KeyboardButton(option['language']['ru'])]]
 
     if is_editing:
-        buttons.append([option['back']['uz']]) \
-            if language == option['language']['uz'] else \
-            buttons.append([option['back']['ru']])
+        buttons.append([option['back'][lang]])
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def main_keyboard(language):
-    uz_buttons = [[KeyboardButton(option['main']['uz'])]]
+    lang = language_definer(language)
 
-    ru_buttons = [[KeyboardButton(option['main']['ru'])]]
+    buttons = [[KeyboardButton(option['main'][lang])]]
 
-    keyboard = uz_buttons if language == 'UZ' else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def start_keyboard():
@@ -347,90 +294,65 @@ def start_keyboard():
 
 
 def confirmation_keyboard(language):
-    uz_buttons = [[KeyboardButton(option['confirmation']['uz']), KeyboardButton(option['not_to_confirmation']['uz'])]]
+    lang = language_definer(language)
 
-    ru_buttons = [[KeyboardButton(option['confirmation']['ru']), KeyboardButton(option['not_to_confirmation']['ru'])]]
+    buttons = [[KeyboardButton(option['confirmation'][lang]), KeyboardButton(option['not_to_confirmation'][lang])]]
 
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def next_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(option['next']['uz'])],
-        [KeyboardButton(option['back']['uz'])]
+    lang = language_definer(language)
+
+    buttons = [
+        [KeyboardButton(option['next'][lang])],
+        [KeyboardButton(option['back'][lang])]
     ]
 
-    ru_buttons = [
-        [KeyboardButton(option['next']['ru'])],
-        [KeyboardButton(option['back']['ru'])]
-    ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def back_keyboard(language):
-    word = option['back']['uz'] if language == option['language']['uz'] else option['back']['ru']
+    lang = language_definer(language)
 
-    keyboard = [[KeyboardButton(word)]]
+    buttons = [[KeyboardButton(option['back'][lang])]]
 
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def type_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(option['types']['uz']['instructor']), KeyboardButton(option['types']['uz']['student'])],
-    ]
+    lang = language_definer(language)
 
-    ru_buttons = [
-        [KeyboardButton(option['types']['ru']['instructor']), KeyboardButton(option['types']['ru']['student'])],
-    ]
-
-    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
+    buttons = [[KeyboardButton(option['types'][lang]['instructor']), KeyboardButton(option['types'][lang]['student'])]]
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def confirmation_advertising_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(option['confirmation_advertising']['uz']['yes']),
-         KeyboardButton(option['confirmation_advertising']['uz']['no'])]
-    ]
+    lang = language_definer(language)
 
-    ru_buttons = [
-        [KeyboardButton(option['confirmation_advertising']['ru']['yes']),
-         KeyboardButton(option['confirmation_advertising']['ru']['no'])]
+    buttons = [
+        [KeyboardButton(option['confirmation_advertising'][lang]['yes']),
+         KeyboardButton(option['confirmation_advertising'][lang]['no'])]
     ]
-
-    buttons = uz_buttons if language == option['language']['uz'] else ru_buttons
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def send_contact_keyboard(language):
-    send = option['send']['uz'] if language == option['language']['uz'] else option['send']['ru']
+    lang = language_definer(language)
 
-    buttons = [
-        [KeyboardButton(send, request_contact=True)]
-    ]
+    buttons = [[KeyboardButton(option['send'][lang], request_contact=True)]]
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def confirmation_with_back_keyboard(language):
-    uz_buttons = [
-        [KeyboardButton(option['confirmation']['uz']), KeyboardButton(option['not_to_confirmation']['uz'])],
-        [KeyboardButton(option['back']['uz'])]
+    lang = language_definer(language)
+
+    buttons = [
+        [KeyboardButton(option['confirmation'][lang]), KeyboardButton(option['not_to_confirmation'][lang])],
+        [KeyboardButton(option['back'][lang])]
     ]
 
-    ru_buttons = [
-        [KeyboardButton(option['confirmation']['ru']), KeyboardButton(option['not_to_confirmation']['ru'])],
-        [KeyboardButton(option['back']['ru'])]
-    ]
-
-    keyboard = uz_buttons if language == option['language']['uz'] else ru_buttons
-
-    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)

@@ -6,9 +6,9 @@ from bot.models.feedback import StatusChoices
 from bot.controllers import feedback_controller, user_controller
 from bot.filters.is_admin import IsAdmin
 from bot.helpers.formats import feedback_all_format, feedback_format, feedback_seen_format, feedback_done_format
-from bot.helpers.utils import Pagination
+from bot.helpers.utils import Pagination, translator
 from bot.helpers.config import SEEN, DONE
-from bot.keyboards.keyboard_buttons import admin, option
+from bot.keyboards.keyboard_buttons import admin
 from bot.keyboards.keyboards import admin_feedback_keyboard, one_feedback_keyboard
 from bot.states.user import UserStates
 from bot.states.feedback import FeedbackStates
@@ -18,9 +18,9 @@ from bot.states.feedback import FeedbackStates
     IsAdmin(), text=[admin['pages']['uz']['feedback'], admin['pages']['ru']['feedback']], state=UserStates.process
 )
 async def admin_feedback_handler(message: Message, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
+    user = await user_controller.get_one(dict(telegram_id=message.chat.id))
     await FeedbackStates.process.set()
-    message_text = 'Izohlar sahifasi' if user.lang == option['language']['uz'] else "Страница комментариев"
+    message_text = translator("Izohlar sahifasi", "Страница комментариев", user.lang)
 
     await message.answer(message_text, reply_markup=admin_feedback_keyboard(user.lang))
 
@@ -56,9 +56,12 @@ async def active_feedback_pagination_handler(message: Message, state: FSMContext
 
     await message.answer(paginated['message'], reply_markup=paginated['keyboard'])
 
-    if not paginated['status']:
+    if paginated['status']:
         await FeedbackStates.process.set()
-        await message.answer("Hozirgacha yozilgan yangi izohlar")
+        message_text = translator(
+            "Hozirgacha yozilgan yangi izohlar", "Новые комментарии, сделанные до сих пор", user.lang
+        )
+        await message.answer(message_text)
 
 
 @dp.callback_query_handler(
@@ -165,12 +168,10 @@ async def seen_single_feedback_handler(query: CallbackQuery, state: FSMContext):
 
     if query.data.startswith("s_d."):
         updated_status = StatusChoices.DONE
-        message_text = "Muommo ko'rildi" if user.lang == option['language']['uz'] else "Обнаружена проблема"
+        message_text = translator("Muommo ko'rildi", "Обнаружена проблема", user.lang)
     elif query.data.startswith("seen."):
         updated_status = StatusChoices.SEEN
-        message_text = "Bu izoh ustida ishlar boshlandi" \
-            if user.lang == option['language']['uz'] else \
-            "Работа над этим комментарием началась"
+        message_text = translator("Bu izoh ustida ishlar boshlandi", "Работа над этим комментарием началась", user.lang)
 
     if feedback.status == StatusChoices.ACTIVE:
         await feedback_controller.update(dict(id=feedback.id), dict(is_read=True, status=updated_status))
@@ -179,8 +180,6 @@ async def seen_single_feedback_handler(query: CallbackQuery, state: FSMContext):
 
     await query.message.answer(message_text)
 
-    await FeedbackStates.active_feedback.set()
-
     paginated = await Pagination('FEEDBACK').paginate(1, 6, dict(is_read=False, status=StatusChoices.ACTIVE), user.lang)
 
     if not paginated['status']:
@@ -188,6 +187,7 @@ async def seen_single_feedback_handler(query: CallbackQuery, state: FSMContext):
         await query.message.delete()
         await query.message.answer(paginated['message'], reply_markup=paginated['keyboard'])
     else:
+        await FeedbackStates.active_feedback.set()
         await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])
 
 
@@ -195,8 +195,6 @@ async def seen_single_feedback_handler(query: CallbackQuery, state: FSMContext):
 async def back_from_single_feedback_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    await FeedbackStates.active_feedback.set()
-
     paginated = await Pagination('FEEDBACK').paginate(1, 6, dict(is_read=False, status=StatusChoices.ACTIVE), user.lang)
 
     if not paginated['status']:
@@ -204,6 +202,7 @@ async def back_from_single_feedback_handler(query: CallbackQuery, state: FSMCont
         await FeedbackStates.process.set()
         await query.message.answer(paginated['message'], reply_markup=paginated['keyboard'])
     else:
+        await FeedbackStates.active_feedback.set()
         await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])
 
 
@@ -222,10 +221,7 @@ async def seen_feedback_pagination_handler(message: Message, state: FSMContext):
     await message.answer(paginated['message'], reply_markup=paginated['keyboard'])
 
     if paginated['status']:
-        message_text = "Hozirgacha bajarilayotgan izohlar" \
-            if user.lang == option['language']['uz'] else \
-            "Комментарии в процессе до сих пор"
-
+        message_text = translator("Hozirgacha bajarilayotgan izohlar", "Комментарии в процессе до сих пор", user.lang)
         await message.answer(message_text)
 
 
@@ -237,9 +233,9 @@ async def seen_feedback_pagination_handler(message: Message, state: FSMContext):
 async def paginate_seen_feedback_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    paginated = await Pagination('FEEDBACK').paginate(
-        int(query.data.split('#')[2]), 6, dict(is_read=True, status=StatusChoices.SEEN), user.lang
-    )
+    page = int(query.data.split('#')[2])
+
+    paginated = await Pagination('FEEDBACK').paginate(page, 6, dict(is_read=True, status=StatusChoices.SEEN), user.lang)
 
     await query.message.edit_text(paginated['message'], reply_markup=paginated['keyboard'])
 
@@ -296,7 +292,7 @@ async def done_single_feedback_handler(query: CallbackQuery, state: FSMContext):
 
     await bot.send_message(author.telegram_id, feedback_done_format(dope, author.lang))
 
-    message_text = "Muommoni hal qilindi" if user.lang == option['language']['uz'] else "Проблема решена"
+    message_text = translator("Muommoni hal qilindi", "Проблема решена", user.lang)
 
     await query.message.answer(message_text)
 

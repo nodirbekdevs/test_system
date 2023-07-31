@@ -4,7 +4,7 @@ from bot.loader import dp
 from bot.controllers import user_controller
 from bot.models.user import User, StatusChoices
 from bot.helpers.formats import introduction_format
-from bot.helpers.utils import is_num
+from bot.helpers.utils import is_num, translator
 from bot.keyboards.keyboard_buttons import option
 from bot.keyboards.keyboards import (
     instructor_pages_keyboard, student_pages_keyboard, language_keyboard, send_contact_keyboard, type_keyboard
@@ -21,7 +21,7 @@ async def cmd_start(message: Message, state: FSMContext):
             await UserStates.process.set()
             return
 
-        message_text = 'Bosh sahifa' if user.lang == option['language']['uz'] else 'Домашняя страница'
+        message_text = translator('Bosh sahifa', 'Домашняя страница', user.lang)
 
         if user.type == User.TypeChoices.STUDENT:
             await UserStates.process.set()
@@ -46,8 +46,8 @@ async def requesting_user_name_handler(message: Message, state: FSMContext):
         )
         return
 
-    first_message = 'Keling tanishamiz' if message.text == option['language']['uz'] else 'Давайте познакомимся'
-    second_message = 'Ismingiz?' if message.text == option['language']['uz'] else 'Как вас зовут?'
+    first_message = translator('Keling tanishamiz', 'Давайте познакомимся', message.text)
+    second_message = translator('Ismingiz?', 'Как вас зовут?', message.text)
 
     async with state.proxy() as data:
         data['user_language'] = message.text
@@ -63,10 +63,9 @@ async def requesting_user_type_handler(message: Message, state: FSMContext):
     data = await state.get_data()
 
     if is_num(message.text):
-        error_message = "Ism sonlardan iborat bo'lmaydi" \
-            if data['user_language'] == option['language']['uz'] else \
-            "Имя не будет состоять из цифр"
-
+        error_message = translator(
+            "Ism sonlardan iborat bo'lmaydi", "Имя не будет состоять из цифр", data['user_language']
+        )
         await message.answer(error_message)
         return
 
@@ -75,9 +74,11 @@ async def requesting_user_type_handler(message: Message, state: FSMContext):
     async with state.proxy() as exist_data:
         exist_data['user_name'] = message.text
 
-    message_text = "O'zingiz uchun tip tanlang. Siz o'qituvchimisiz yoki o'quvchi" \
-        if data['user_language'] == option['language']['uz'] else \
-        "Выберите тип для себя. Вы учитель или ученик?"
+    message_text = translator(
+        "O'zingiz uchun tip tanlang. Siz o'qituvchimisiz yoki o'quvchi",
+        "Выберите тип для себя. Вы учитель или ученик?",
+        data['user_language']
+    )
 
     await message.answer(message_text, reply_markup=type_keyboard(data['user_language']))
 
@@ -87,10 +88,9 @@ async def requesting_user_phone_handler(message: Message, state: FSMContext):
     data = await state.get_data()
 
     if is_num(message.text):
-        error_message = "Ism sonlardan iborat bo'lmaydi" \
-            if data['user_language'] == option['language']['uz'] else \
-            "Имя не будет состоять из цифр"
-
+        error_message = translator(
+            "Ism sonlardan iborat bo'lmaydi", "Имя не будет состоять из цифр", data['user_language']
+        )
         await message.answer(error_message)
         return
 
@@ -98,21 +98,18 @@ async def requesting_user_phone_handler(message: Message, state: FSMContext):
         option['types']['uz']['instructor'], option['types']['uz']['student'],
         option['types']['ru']['instructor'], option['types']['ru']['student']
     ]:
-        error_message = "Tanlash mumkun bo'lgan tiplardan birini tanlang" \
-            if data['user_language'] == option['language']['uz'] else \
-            "Выберите один из доступных типов"
-
+        error_message = translator(
+            "Tanlash mumkun bo'lgan tiplardan birini tanlang", "Выберите один из доступных типов", data['user_language']
+        )
         await message.answer(error_message)
         return
 
-    first_message, second_message = "", ""
-
-    if data['user_language'] == option['language']['uz']:
-        first_message = 'Telefon raqamingizni ulashing'
-        second_message = f"Contactingizni jo'natish uchun {option['send']['uz']} ni bosing"
-    elif data['user_language'] == option['language']['ru']:
-        first_message = 'Поделитесь своим контактом'
-        second_message = f"Нажмите {option['send']['ru']} тобы отправить ваш контакт"
+    first_message = translator('Telefon raqamingizni ulashing', 'Поделитесь своим контактом', data['user_language'])
+    second_message = translator(
+        f"Contactingizni jo'natish uchun {option['send']['uz']} ni bosing",
+        f"Нажмите {option['send']['ru']} тобы отправить ваш контакт",
+        data['user_language']
+    )
 
     user_type = User.TypeChoices.INSTRUCTOR \
         if message.text in [option['types']['uz']['instructor'], option['types']['ru']['instructor']] else \
@@ -139,15 +136,17 @@ async def user_creation_handler(message: Message, state: FSMContext):
         number = message.contact.phone_number
 
     if not is_num(number):
-        error_message = "Telefon raqam sonlardan iborat bo'lishi kerak" \
-            if data['user_language'] == option['language']['uz'] else \
-            "Номер телефона должен содержать цифры"
+        error_message = translator(
+            "Telefon raqam sonlardan iborat bo'lishi kerak",
+            "Номер телефона должен содержать цифры",
+            data['user_language']
+        )
         await message.answer(error_message)
         return
 
-    message_text = 'Registratsiya muvaffaqqiyatli yakunlandi' \
-        if data['user_language'] == option['language']['uz'] else \
-        'Регистрация успешно завершена'
+    message_text = translator(
+        'Registratsiya muvaffaqqiyatli yakunlandi', 'Регистрация успешно завершена', data['user_language']
+    )
 
     await user_controller.make(dict(
         telegram_id=message.from_user.id,

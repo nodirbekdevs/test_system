@@ -5,6 +5,7 @@ from bot.filters.is_not_admin import IsNotAdmin
 from bot.models.user import User
 from bot.keyboards.keyboard_buttons import option
 from bot.keyboards.keyboards import student_pages_keyboard, instructor_pages_keyboard
+from bot.helpers.utils import translator
 from bot.states.user import UserStates
 
 
@@ -12,7 +13,7 @@ from bot.states.user import UserStates
 async def user_main_handler(message: Message, state: FSMContext):
     user = await User.get_user_by_telegram_id(message.from_user.id)
 
-    message_text = 'Bosh sahifa' if user.lang == option['language']['uz'] else 'Домашняя страница'
+    message_text = translator('Bosh sahifa', 'Домашняя страница', user.lang)
 
     await UserStates.process.set()
 

@@ -20,7 +20,7 @@ from bot.states.user import UserStates
     IsAdmin(), text=[admin['pages']['uz']['subjects'], admin['pages']['ru']['subjects']], state=UserStates.process
 )
 async def admin_subjects_handler(message: Message, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
+    user = await user_controller.get_one(dict(telegram_id=message.chat.id))
 
     message_text = "Fanlar sahifasi" if user.lang == option['language']['uz'] else "Страница предметов"
 
@@ -222,7 +222,7 @@ async def subject_creation_handler(message: Message, state: FSMContext):
     if message.text in [option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['ru']['no']]:
         error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
 
-        await message.answer(error_message, reply_markup=admin_subjects_keyboard(user.lang))
+        await message.answer(error_message, reply_markup=admin_keyboard(SUBJECT, user.lang))
         return
 
     data = await state.get_data()

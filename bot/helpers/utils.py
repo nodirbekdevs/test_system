@@ -1,7 +1,8 @@
 from aiogram import Bot
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ChatMemberStatus
 from bot.controllers import (
-    advertising_controller, section_controller, subject_controller, test_controller, user_controller, feedback_controller
+    advertising_controller, section_controller, subject_controller, test_controller, user_controller,
+    feedback_controller
 )
 from bot.models.user import User
 from bot.models.feedback import StatusChoices as FeedbackStatusChoices
@@ -20,7 +21,8 @@ class Pagination:
     def __init__(self, data_type: str):
         self.data_type = data_type
 
-    async def paginate(self, page: int, limit: int, query: dict, language: str, order_by_columns=[], form: str = '') -> dict:
+    async def paginate(self, page: int, limit: int, query: dict, language: str, order_by_columns=[],
+                       form: str = '') -> dict:
         text, clause, data, all_data, keyboard, arr, author, status = "", "", [], [], InlineKeyboardMarkup(), [], {}, True
 
         offset = limit * (page - 1)
@@ -222,3 +224,11 @@ async def is_subscribed(bot: Bot, message: Message, CHANNEL_ID: int) -> bool:
         return False
 
     return True
+
+
+def language_definer(language):
+    return 'uz' if language == option['language']['uz'] else 'ru'
+
+
+def translator(sentence_uz, sentence_ru, language):
+    return sentence_uz if language == option['language']['uz'] else sentence_ru

@@ -3,37 +3,29 @@ from aiogram.types import CallbackQuery, Message
 
 from bot.loader import dp
 from bot.filters.is_admin_and_instructor import IsAdminAndInstructor
+from bot.filters.is_admin import IsAdmin
 from bot.helpers.config import INSTRUCTOR
 from bot.controllers import user_controller
 from bot.models.user import User
-from bot.keyboards.keyboards import admin_instructors_keyboard, one_admin_instructor_keyboard, back_keyboard
+from bot.keyboards.keyboards import admin_keyboard, one_admin_keyboard, back_keyboard
 from bot.keyboards.keyboard_buttons import admin, option
-from bot.helpers.utils import Pagination, is_num
+from bot.helpers.utils import Pagination, translator
 from bot.helpers.formats import user_format
+from bot.helpers.config import STUDENT
 from bot.states.students import StudentStates
 from bot.states.user import UserStates
 
 
 @dp.message_handler(
-    IsAdminAndInstructor(), text=[admin['pages']['uz']['students'], admin['pages']['ru']['students']], state=UserStates.process
+    IsAdmin(), text=[admin['pages']['uz']['students'], admin['pages']['ru']['students']], state=UserStates.process
 )
-async def admin_instructors_handler(message: Message, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
+async def admin_students_handler(message: Message, state: FSMContext):
+    paginated = await Pagination("STUDENT").paginate(1, 6, dict(type=User.TypeChoices.STUDENT), user.lang)
 
-    if user.type == User.TypeChoices.ADMIN:
-        paginated = await Pagination("INSTRUCTORS").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
+    if paginated['status']:
+        await StudentStates.all_students.set()
 
-        if paginated['status']:
-            await StudentStates.all_students.set()
-
-        await message.answer(text=paginated['message'], reply_markup=paginated['keyboard'])
-        return
-
-    message_text = "Instructorlar sahifasi" if user.lang == option['language']['uz'] else "Страница инструкторов"
-
-    await StudentStates.process.set()
-
-    await message.answer(message_text, reply_markup=admin_instructors_keyboard(user.lang))
+    await message.answer(text=paginated['message'], reply_markup=paginated['keyboard'])
 
 
 @dp.message_handler(

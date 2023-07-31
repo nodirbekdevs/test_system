@@ -7,7 +7,7 @@ from bot.controllers import user_controller
 from bot.models.user import User
 from bot.keyboards.keyboards import admin_keyboard, one_admin_keyboard, back_keyboard
 from bot.keyboards.keyboard_buttons import admin, option
-from bot.helpers.utils import Pagination, is_num
+from bot.helpers.utils import Pagination, is_num, translator
 from bot.helpers.config import ADMIN
 from bot.helpers.formats import user_format
 from bot.states.admin import AdminStates
@@ -18,9 +18,9 @@ from bot.states.user import UserStates
     IsAdmin(), text=[admin['pages']['uz']['admins'], admin['pages']['ru']['admins']], state=UserStates.process
 )
 async def admin_admins_handler(message: Message, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
+    user = await user_controller.get_one(dict(telegram_id=message.chat.id))
 
-    message_text = "Adminlar sahifasi" if user.lang == option['language']['uz'] else "Страница администратораов"
+    message_text = translator("Adminlar sahifasi", "Страница администратораов", user.lang)
 
     await AdminStates.process.set()
 
@@ -116,9 +116,9 @@ async def add_admin_handler(message: Message, state: FSMContext):
 
     await AdminStates.add.set()
 
-    message_text = "Yangi adminning telegram_id raqamini yuboring" \
-        if user.lang == option['language']['uz'] else \
-        "Отправьте telegram_id нового админа"
+    message_text = translator(
+        "Yangi adminning telegram_id raqamini yuboring", "Отправьте telegram_id нового админа", user.lang
+    )
 
     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
 
@@ -128,42 +128,50 @@ async def add_admin_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = "Bekor qilindi" if user.lang == option['language']['uz'] else "Отменено"
+        error_message = translator("Bekor qilindi", "Отменено", user.lang)
         await message.answer(error_message)
         await admin_admins_handler(message, state)
         return
 
     if not is_num(message.text):
-        message_text = "Iltimos to'g'ri telegram_id yuboring" \
-            if user.lang == option['language']['uz'] else \
-            "Пожалуйста, отправьте правильный telegram_id"
-
-        await message.answer(message_text)
+        error_message = translator(
+            "Iltimos to'g'ri telegram_id yuboring", "Пожалуйста, отправьте правильный telegram_id", user.lang
+        )
+        await message.answer(error_message)
         return
 
     if message.from_user.id == int(message.text):
-        await message.answer(
-            text="Отправьте telegrma id другого админа. Это telegram id пренадлежит вам."
+        error_message = translator(
+            "Boshqa adminning telegram idsini yuboring. Bu telegram id sizga tegishli.",
+            "Отправьте telegrma id другого админа. Это telegram id пренадлежит вам.",
+            user.lang
         )
+        await message.answer(error_message)
         return
 
     selected_admin = await user_controller.get_one(dict(telegram_id=int(message.text)))
 
+    message_text = translator("Yangi admin qo'shildi", "Добавлен новый админ", user.lang)
+
     if selected_admin:
-        message_text = "Yangi admin qo'shildi" if user.lang == option['language']['uz'] else "Добавлен новый админ"
-
         await selected_admin.update(type=User.TypeChoices.ADMIN).apply()
-
+        new_admin_message = translator(
+            "Siz admin sifatida botdan foydalanishga muvaffaqiyatli qo‘shildingiz.\n /start tugmasini bosing.",
+            "Нажмите Вы успешно присоединились, чтобы использовать бота в качестве администратора.\n /start.",
+            selected_admin.lang
+        )
+        await dp.bot.send_message(chat_id=selected_admin.telegram_id, text=new_admin_message)
         await message.answer(message_text, reply_markup=admin_keyboard(ADMIN, user.lang))
         return
 
     try:
         admin = await dp.bot.get_chat(chat_id=int(message.text))
     except:
-        error_message = "telegram_id noto'g'ri jo'natilgan yoki yangi admin botga start bosmagan" \
-            if user.lang == option['language']['uz'] else \
-            "Неправильно отправлен telegram_id или новый админ не нажал старт на боте"
-
+        error_message = translator(
+            "telegram_id noto'g'ri jo'natilgan yoki yangi admin botga start bosmagan",
+            "Неправильно отправлен telegram_id или новый админ не нажал старт на боте",
+            user.lang
+        )
         await message.answer(error_message)
         return
 
@@ -179,12 +187,16 @@ async def add_admin_handler(message: Message, state: FSMContext):
 
     await AdminStates.process.set()
 
-    await user_controller.make(admin_data)
+    new_admin = await user_controller.make(admin_data)
 
-    await dp.bot.send_message(chat_id=admin['id'], text="Вы успешно добавлены на пользования бота.\n Нажмите /start")
+    new_admin_message = translator(
+        "Siz admin sifatida botdan foydalanishga muvaffaqiyatli qo‘shildingiz.\n /start tugmasini bosing.",
+        "Нажмите Вы успешно присоединились, чтобы использовать бота в качестве администратора.\n /start.",
+        new_admin.lang
+    )
+
+    await dp.bot.send_message(chat_id=admin['id'], text=new_admin_message)
 
     await message.delete()
-
-    message_text = "Yangi admin qo'shildi" if user.lang == option['language']['uz'] else "Новый админ добален"
 
     await message.answer(message_text, reply_markup=admin_keyboard(ADMIN, user.lang))
