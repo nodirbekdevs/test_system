@@ -2,6 +2,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from deep_translator import GoogleTranslator
+from asyncio import to_thread
 
 from bot.loader import dp
 from bot.filters.is_admin import IsAdmin
@@ -9,7 +10,7 @@ from bot.controllers import user_controller, subject_controller
 from bot.models.subject import StatusChoices
 from bot.keyboards.keyboards import admin_keyboard, one_admin_keyboard, back_keyboard, confirmation_keyboard
 from bot.keyboards.keyboard_buttons import admin, option
-from bot.helpers.utils import Pagination, is_num, translator
+from bot.helpers.utils import Pagination, is_num, translator, translate_text
 from bot.helpers.formats import subject_format
 from bot.helpers.config import SUBJECT
 from bot.states.subject import SubjectStates
@@ -225,8 +226,10 @@ async def subject_creation_handler(message: Message, state: FSMContext):
 
     translator_language = translator("ru", 'uz', user.lang)
 
-    translated_subject_name = GoogleTranslator(target=translator_language).translate(data['subject_name']).capitalize()
-    translated_subject_description = GoogleTranslator(target=translator_language).translate(data['subject_description']).capitalize()
+    translated = GoogleTranslator(source='auto', target=translator_language)
+
+    translated_subject_name = await translate_text(translated, data['subject_name'])
+    translated_subject_description = await translate_text(translated, data['subject_description'])
 
     name_uz, name_ru, description_uz, description_ru = '', '', '', ''
 

@@ -3,7 +3,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, Message, ContentTypes
 
 from deep_translator import GoogleTranslator
-from os import mkdir
+from os import mkdir, remove
 from os.path import join, abspath, dirname, exists
 from asyncio import to_thread
 
@@ -141,6 +141,16 @@ async def delete_test_handler(query: CallbackQuery, state: FSMContext):
         )
         await query.message.answer(text=error_message)
         return
+
+    question = translator(test.question_uz, test.question_ru, user.lang)
+
+    path = join(
+        dirname(
+            abspath(__file__)
+        ), '..', '..', '..', 'test_app', 'static', 'media', 'test_photos', f'{user.id}_{question}.jpg'
+    )
+
+    await to_thread(remove, path)
 
     deleting = await test_controller.delete(dict(id=test.id))
 
@@ -499,8 +509,11 @@ async def test_creation_handler(message: Message, state: FSMContext):
         variants_ru = variants
 
     if data['test_image'] != '':
-        path = join(dirname(abspath(__file__)), '..', '..', '..', 'test_app', 'static', 'media', 'test_photos',
-                    f'{question_uz}.jpg')
+        path = join(
+            dirname(
+                abspath(__file__)
+            ), '..', '..', '..', 'test_app', 'static', 'media', 'test_photos', f'{user.id}.{question_uz}.jpg'
+        )
 
         photo_file = await dp.bot.download_file_by_id(data['test_image'])
 

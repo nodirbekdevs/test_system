@@ -546,3 +546,11 @@
 {'time':'31/07/2023 02:49:45 PM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
 {'time':'31/07/2023 02:49:45 PM', 'name': 'global', 'level': 'INFO', 'message': '20'}
 {'time':'31/07/2023 02:49:45 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'01/08/2023 11:00:02 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'01/08/2023 11:00:02 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}
+{'time':'01/08/2023 11:00:08 AM', 'name': 'global', 'level': 'INFO', 'message': 'postgresql://postgres:necshuhrat@localhost:5432/test_system'}
+{'time':'01/08/2023 11:00:10 AM', 'name': 'global', 'level': 'INFO', 'message': 'DB connected'}
+{'time':'01/08/2023 11:00:10 AM', 'name': 'global', 'level': 'INFO', 'message': '20'}
+{'time':'01/08/2023 11:00:10 AM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot started'}
+{'time':'01/08/2023 01:05:14 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Shutting down..'}
+{'time':'01/08/2023 01:05:14 PM', 'name': 'global', 'level': 'WARNING', 'message': 'Bot down'}

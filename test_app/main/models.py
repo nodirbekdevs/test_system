@@ -70,7 +70,7 @@ class Test(CreateUpdateTracker):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='test_images/', **nnb)
+    image = models.CharField(max_length=255, **nnb)
     question_uz = models.CharField(max_length=255, **nnb)
     question_ru = models.CharField(max_length=255, **nnb)
     variants_uz = ArrayField(models.CharField(max_length=255, **nnb))
@@ -91,8 +91,8 @@ class Feedback(CreateUpdateTracker):
 
 class Advertising(CreateUpdateTracker):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='advertising_images/', **nnb)
-    file = models.CharField(max_length=255, **nnb)
+    image = models.CharField(max_length=255, **nnb)
+    file = models.CharField(max_length=255, **nb)
     title = models.CharField(max_length=255, **nnb)
     description = models.CharField(max_length=255, **nnb)
     is_send = models.BooleanField(default=False)

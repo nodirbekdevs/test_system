@@ -1,5 +1,9 @@
 from aiogram import Bot
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ChatMemberStatus
+
+from deep_translator import GoogleTranslator
+from asyncio import get_event_loop, to_thread
+
 from bot.controllers import (
     advertising_controller, section_controller, subject_controller, test_controller, user_controller,
     feedback_controller
@@ -15,6 +19,7 @@ from bot.keyboards.keyboards import (
     instructor_keyboard,
     student_instructor_feedback_keyboard
 )
+
 
 
 def translator(sentence_uz, sentence_ru, language):
@@ -213,3 +218,8 @@ async def is_subscribed(bot: Bot, message: Message, CHANNEL_ID: int) -> bool:
 
 def language_definer(language):
     return 'uz' if language == option['language']['uz'] else 'ru'
+
+
+async def translate_text(translator, text):
+    translated_text = await to_thread(translator.translate, text)
+    return translated_text.capitalize()

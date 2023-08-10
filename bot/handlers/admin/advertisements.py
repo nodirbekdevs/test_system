@@ -1,7 +1,7 @@
 from aiogram.types import Message, CallbackQuery, ContentTypes
 from aiogram.dispatcher import FSMContext
 
-from os import mkdir
+from os import mkdir, remove
 from os.path import join, exists, dirname, abspath
 
 import aiofiles
@@ -174,6 +174,16 @@ async def delete_advertising_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
     id = int(query.data.split('.')[1])
+
+    advertising = await advertising_controller.get_one(dict(id=id))
+
+    deleting_path = join(
+        dirname(
+            abspath(__file__)
+        ), '..', '..', '..', 'test_app', 'static', 'media', 'advertising_photos', f'{advertising.title}.jpg'
+    )
+
+    await to_thread(remove, deleting_path)
 
     await advertising_controller.delete(dict(id=id))
 
