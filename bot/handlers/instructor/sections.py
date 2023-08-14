@@ -6,12 +6,11 @@ from deep_translator import GoogleTranslator
 from bot.loader import dp
 from bot.controllers import user_controller, section_controller, test_controller, subject_controller
 from bot.models.user import User
-from bot.models.section import Section, StatusChoices
-from bot.keyboards.keyboards import \
-    instructor_keyboard, one_instructor_keyboard, subjects_sections_keyboard, confirmation_keyboard, back_keyboard
+from bot.models.section import Section
+from bot.keyboards.keyboards import instructor_keyboard, one_instructor_keyboard, confirmation_keyboard, back_keyboard
 from bot.filters.is_instructor import IsInstructor
 from bot.keyboards.keyboard_buttons import instructor, option
-from bot.helpers.utils import Pagination, is_num, translator
+from bot.helpers.utils import Pagination, is_num, translator, translate_text
 from bot.helpers.config import SECTION
 from bot.helpers.formats import section_format
 from bot.states.section import SectionStates
@@ -165,60 +164,45 @@ async def delete_section_handler(query: CallbackQuery, state: FSMContext):
 async def requesting_subject_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    subjects = await subject_controller.get_all(dict(status=StatusChoices.ACTIVE))
-
-    if len(subjects) <= 0:
-        error_message = translator(
-            "Hali fanlar qo'shilmagani uchun test qo'sha olmaysiz",
-            "Вы не можете добавить тест, потому что еще не добавлено ни одного предмета",
-            user.lang
-        )
-        await message.answer(error_message)
-        return
-
-    await SectionStates.subject.set()
-
-    message_text = translator(
-        "Qaysi fan uchun bo'lim qo'shmoqchisiz", "Для какой темы вы хотите добавить раздел", user.lang
-    )
-
-    await message.answer(text=message_text, reply_markup=subjects_sections_keyboard(subjects, user.lang, 3))
-
-
-@dp.message_handler(IsInstructor(), state=SectionStates.subject)
-async def requesting_name_handler(message: Message, state: FSMContext):
-    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
-
-    if is_num(message.text):
-        error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
-        await message.answer(error_message)
-        return
-
-    if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
-        await message.answer(error_message)
-        await instructor_sections_handler(message, state)
-        return
-
-    subject_query = translator(dict(name_uz=message.text), dict(name_ru=message.text), user.lang)
-
-    subject_checking = await subject_controller.get_one(subject_query)
-
-    if not subject_checking:
-        error_message = translator(
-            "Berilgan fanlardan birini tanlang",  "Выберите один из предложенных предметов", user.lang
-        )
-
-        await message.answer(error_message)
-        return
-
-    async with state.proxy() as data:
-        data['section_subject'] = message.text
-
     await SectionStates.name.set()
 
     message_text = translator("Bo'lim uchun nom yozing", "Введите название раздела", user.lang)
     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
+
+
+# @dp.message_handler(IsInstructor(), state=SectionStates.subject)
+# async def requesting_name_handler(message: Message, state: FSMContext):
+#     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
+#
+#     if is_num(message.text):
+#         error_message = translator("Raqam jo'natmang!", "Не присылайте номер!", user.lang)
+#         await message.answer(error_message)
+#         return
+#
+#     if message.text in [option['back']['uz'], option['back']['ru']]:
+#         error_message = translator("Bekor qilindi", "Отменено", user.lang)
+#         await message.answer(error_message, reply_markup=instructor_keyboard(SECTION, user.lang))
+#         return
+#
+#     subject_query = translator(dict(name_uz=message.text), dict(name_ru=message.text), user.lang)
+#
+#     subject_checking = await subject_controller.get_one(subject_query)
+#
+#     if not subject_checking:
+#         error_message = translator(
+#             "Berilgan fanlardan birini tanlang",  "Выберите один из предложенных предметов", user.lang
+#         )
+#
+#         await message.answer(error_message)
+#         return
+#
+#     async with state.proxy() as data:
+#         data['section_subject'] = message.text
+#
+#     await SectionStates.name.set()
+#
+#     message_text = translator("Bo'lim uchun nom yozing", "Введите название раздела", user.lang)
+#     await message.answer(message_text, reply_markup=back_keyboard(user.lang))
 
 
 @dp.message_handler(IsInstructor(), state=SectionStates.name)
@@ -232,16 +216,14 @@ async def requesting_description_handler(message: Message, state: FSMContext):
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         error_message = translator("Bekor qilindi", "Отменено", user.lang)
-
-        await message.answer(error_message)
-        await instructor_sections_handler(message, state)
+        await message.answer(error_message, reply_markup=instructor_keyboard(SECTION, user.lang))
         return
 
-    subject_query = translator(
+    section_query = translator(
         dict(user_id=user.id, name_uz=message.text), dict(user_id=user.id, name_ru=message.text), user.lang
     )
 
-    section_checking = await section_controller.get_one(subject_query)
+    section_checking = await section_controller.get_one(section_query)
 
     if section_checking:
         error_message = translator("Bu nom bilan bo'lim mavjud", "Есть раздел с таким названием", user.lang)
@@ -270,9 +252,8 @@ async def checking_section_creation_handler(message: Message, state: FSMContext)
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         error_message = translator("Bekor qilindi", "Отменено", user.lang)
-
-        await message.answer(error_message)
-        await instructor_sections_handler(message, state)
+        await SectionStates.process.set()
+        await message.answer(error_message, reply_markup=instructor_keyboard(SECTION, user.lang))
         return
 
     async with state.proxy() as data:
@@ -282,8 +263,12 @@ async def checking_section_creation_handler(message: Message, state: FSMContext)
 
     await SectionStates.checking.set()
 
+    subject = await subject_controller.get_one(dict(id=user.subject_id))
+
+    subject_name = translator(subject.name_uz, subject.name_ru, user.lang)
+
     dope = dict(
-        subject=state_data.get('section_subject'),
+        subject=subject_name,
         name=state_data.get('section_name'),
         description=message.text
     )
@@ -305,11 +290,13 @@ async def section_creation_handler(message: Message, state: FSMContext):
     if message.text in [option['not_to_confirmation']['uz'], option['not_to_confirmation']['ru']]:
         await SectionStates.process.set()
         error_message = translator("Bo'lim muvaffaqqiyatli qo'shilmadi!", "Раздел не был успешно добавлен!", user.lang)
-
         await message.answer(error_message, reply_markup=instructor_keyboard(SECTION, user.lang))
         return
 
-    if message.text not in [option['confirmation']['uz'], option['confirmation']['ru']]:
+    if message.text not in [
+        option['confirmation']['uz'], option['confirmation']['ru'],
+        option['not_to_confirmation']['uz'], option['not_to_confirmation']['ru']
+    ]:
         error_message = translator(
             "Bosishingiz kerak bo'lgan variantlardan birini jo'nating",
             "Отправьте один из вариантов, который вам нужно нажать",
@@ -322,15 +309,14 @@ async def section_creation_handler(message: Message, state: FSMContext):
 
     data = await state.get_data()
 
-    subject, name, description = data.get('section_subject'), data.get('section_name'), data.get('section_description')
+    name, description = data.get('section_name'), data.get('section_description')
 
-    subject_data = dict(name_uz=subject) if user.lang == option['language']['uz'] else dict(name_ru=subject)
+    translator_language = translator('ru', 'uz', user.lang)
 
-    subject = await subject_controller.get_one(subject_data)
+    translated = GoogleTranslator(source='auto', target=translator_language)
 
-    translating_lang = translator('ru', 'uz', user.lang)
-    translated_section_name = GoogleTranslator(target=translating_lang).translate(name)
-    translated_section_description = GoogleTranslator(target=translating_lang).translate(description)
+    translated_section_name = await translate_text(translated, name)
+    translated_section_description = await translate_text(translated, description)
 
     name_uz, name_ru, description_uz, description_ru = '', '', '', ''
 
@@ -345,32 +331,31 @@ async def section_creation_handler(message: Message, state: FSMContext):
         description_uz = translated_section_description
         description_ru = description
 
-    section = await Section.create(
+    await Section.create(
         user_id=user.id,
-        subject_id=subject.id,
+        subject_id=user.subject_id,
         name_uz=name_uz,
         name_ru=name_ru,
         description_uz=description_uz,
         description_ru=description_ru
     )
 
-    dope = dict(
-        user=user.name,
-        subject=translator(subject.name_uz, subject.name_ru, user.lang),
-        name=translator(section.name_uz, section.name_ru, user.lang),
-        description=translator(section.description_uz, section.description_ru, user.lang),
-        total_tests=section.total_tests,
-        status=section.status,
-        created_at=section.created_at
-    )
+    # dope = dict(
+    #     user=user.name,
+    #     subject=translator(subject.name_uz, subject.name_ru, user.lang),
+    #     name=translator(section.name_uz, section.name_ru, user.lang),
+    #     description=translator(section.description_uz, section.description_ru, user.lang),
+    #     total_tests=section.total_tests,
+    #     status=section.status,
+    #     created_at=section.created_at
+    # )
 
     async with state.proxy() as data:
-        del data['section_subject']
         del data['section_name']
         del data['section_description']
 
     message_text = translator("Bo'lim muvaffaqqiyatli qo'shildi", "Раздел успешно добавлен", user.lang)
 
-    await message.answer(section_format(dope, user.lang))
+    # await message.answer(section_format(dope, user.lang))
 
     await message.answer(message_text, reply_markup=instructor_keyboard(SECTION, user.lang))

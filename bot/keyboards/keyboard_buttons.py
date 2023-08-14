@@ -135,6 +135,10 @@ option['delete_advertise'] = dict()
 option['delete_advertise']['uz'] = "Reklamani o'chirish"
 option['delete_advertise']['ru'] = "Удалить объявление"
 
+option['finish'] = dict()
+option['finish']['uz'] = 'Tugatish'
+option['finish']['ru'] = 'Заканчивать'
+
 option['confirmation_advertising'] = dict()
 option['confirmation_advertising']['uz'] = dict()
 option['confirmation_advertising']['uz']['yes'] = "Reklamani tasdiqlash"

@@ -21,7 +21,6 @@ from bot.keyboards.keyboards import (
 )
 
 
-
 def translator(sentence_uz, sentence_ru, language):
     return sentence_uz if language == option['language']['uz'] else sentence_ru
 
@@ -223,3 +222,8 @@ def language_definer(language):
 async def translate_text(translator, text):
     translated_text = await to_thread(translator.translate, text)
     return translated_text.capitalize()
+
+
+def generate_variants(item_count):
+    base = ord('a')
+    return [chr(base + i) for i in range(len(item_count))]

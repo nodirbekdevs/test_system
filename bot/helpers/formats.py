@@ -1,6 +1,7 @@
 from datetime import datetime
 from bot.models.user import User
 from bot.keyboards.keyboard_buttons import option
+from bot.helpers.utils import generate_variants, language_definer, translator
 
 
 def introduction_format(name):
@@ -25,9 +26,9 @@ def subject_format(data, language, is_editing=False):
         message += f"Описание - {data['description']}"
 
     if is_editing:
-        message += f"\n\nTugaganini tasdiqlaysizmi ?" \
-            if language == option['language']['uz'] else \
-            f"\n\nМожете ли вы подтвердить, что это сделано ?"
+        message += translator(
+            f"\n\nTugaganini tasdiqlaysizmi ?", f"\n\nМожете ли вы подтвердить, что это сделано ?", language
+        )
     else:
         if language == option['language']['uz']:
             message += f"\nHolati - {data['status']}\n"
@@ -68,9 +69,9 @@ def test_format(data, language, is_editing=False):
         message += f"Правильный ответ - {data['correct_answer']}"
 
     if is_editing:
-        message += f"\n\nTugaganini tasdiqlaysizmi ?" \
-            if language == option['language']['uz'] else \
-            f"\n\nМожете ли вы подтвердить, что это сделано ?"
+        message += translator(
+            f"\n\nTugaganini tasdiqlaysizmi ?",  f"\n\nМожете ли вы подтвердить, что это сделано ?", language
+        )
     else:
         if language == option['language']['uz']:
             message += f"\nHolati - {data['status']}\n"
@@ -82,19 +83,60 @@ def test_format(data, language, is_editing=False):
     return message
 
 
+def test_solution_format(test, language):
+    message = ""
+
+    variants = generate_variants(test['variants_uz'])
+
+    lang = language_definer(language)
+
+    message += f"<b>{test[f'question_{lang}']}</b>\n\n"
+
+    for test_variant, variant in zip(test[f'variants_{lang}'], variants):
+        message += f'<b>{variant.upper()}</b> {test_variant}\n'
+
+    return message
+
+
+def checking_solved_tests_format(tests, language, percentage, score=False):
+    message = translator('Test jarayoni tugadi.\n\n', 'Тестовый процесс завершен.\n\n', language)
+
+    lang = language_definer(language)
+
+    for index, test in enumerate(tests, start=1):
+        variants = generate_variants(test['variants_uz'])
+
+        message += f"<b>{index}. {test[f'question_{lang}']}</b>\n"
+
+        for test_variant, variant in zip(test[f'variants_{lang}'], variants):
+            text = f'<b>{variant.upper()}</b> {test_variant}\n'
+
+            if test_variant == test[f'correct_answer_{lang}']:
+                text = f'<b>{variant.upper()}</b> {test_variant} ✅\n'
+
+            if test_variant == test['answer'] and test['answer'] != test[f'correct_answer_{lang}']:
+                text = f'<b>{variant.upper()}</b> {test_variant} ➖\n'
+
+            message += text
+
+    if percentage:
+        message += translator(f'\nTestdan {percentage}% oldingiz.', f'\nВы получили {percentage}% на тесте.', language)
+
+    if score:
+        message += translator(f'\nTestdan {score} bal oldingiz', f'\nВы получили {score} бал за тест', language)
+
+    return message
+
+
 def user_format(data, language, is_editing=False):
     message, type = "", ""
 
     if data.type == User.TypeChoices.ADMIN:
-        type = 'Admin' if language == option['language']['uz'] else 'Админ'
+        type = translator('Admin', 'Админ', language)
     elif data.type == User.TypeChoices.INSTRUCTOR:
-        type = option['types']['uz']['instructor'] \
-            if language == option['language']['uz'] else \
-            option['types']['uz']['instructor']
+        type = translator(option['types']['uz']['instructor'], option['types']['ru']['instructor'], language)
     elif data.type == User.TypeChoices.STUDENT:
-        type = option['types']['uz']['student'] \
-            if language == option['language']['uz'] else \
-            option['types']['uz']['student']
+        type = translator(option['types']['uz']['student'], option['types']['ru']['student'], language)
 
     if language == option['language']['uz']:
         message += "Ma'lumotlaringiz: \n"
@@ -112,9 +154,7 @@ def user_format(data, language, is_editing=False):
         message += f"Тип - {type}."
 
     if is_editing:
-        message += f"\n\nNimani o'zgartirmoqchisiz ?" \
-            if language == option['language']['uz'] else \
-            f"\n\nЧто вы хотите изменить ?"
+        message += translator(f"\n\nNimani o'zgartirmoqchisiz ?", f"\n\nЧто вы хотите изменить ?", language)
 
     return message
 
@@ -167,8 +207,9 @@ def section_format(data, language, is_editing=False):
             message += f"Добавлено время - {data['created_at'].strftime('%d.%m.%Y %H:%M')}\n"
 
     if is_editing:
-        message += "\nTugaganini tasdiqlaysizmi ?" if language == option['language'][
-            'uz'] else "\nПодтвердить завершение ?"
+        message += translator(
+            f"\n\nTugaganini tasdiqlaysizmi ?", f"\n\nМожете ли вы подтвердить, что это сделано ?", language
+        )
 
     return message
 
@@ -229,8 +270,9 @@ def advertising_format(data, language, is_ending=False):
     message += f"\n<pre>{data['description']}</pre>\n"
 
     if is_ending:
-        message += "\nTugatilganini tasdiqlaysizmi ?" if language == option['language'][
-            'uz'] else "\nПодтвердить завершение ?"
+        message += translator(
+            f"\n\nTugaganini tasdiqlaysizmi ?", f"\n\nМожете ли вы подтвердить, что это сделано ?", language
+        )
 
     return message
 

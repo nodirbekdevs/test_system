@@ -12,3 +12,8 @@ class TestStates(StatesGroup):
     variants = State()
     correct_answer = State()
     checking = State()
+    choose_subject = State()
+    choose_instructor = State()
+    choose_section = State()
+    start_test = State()
+    solving_test = State()

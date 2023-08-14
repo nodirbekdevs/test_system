@@ -8,6 +8,7 @@ from bot.helpers.config import DB_URL
 from bot.handlers import onboarding, register, settings, feedback, main
 from bot.handlers.admin import advertisements, feedback, admins, instructors, subjects
 from bot.handlers.instructor import sections, tests
+from bot.handlers.student import tests
 
 from bot.filters import setup
 from bot.middlewares.admin_creation import AdminCreationMiddleware

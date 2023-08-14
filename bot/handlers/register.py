@@ -1,13 +1,18 @@
 from aiogram.types import Message, ContentTypes, ReplyKeyboardRemove
 from aiogram.dispatcher import FSMContext
 from bot.loader import dp
-from bot.controllers import user_controller
+from bot.controllers import user_controller, subject_controller
 from bot.models.user import User, StatusChoices
 from bot.helpers.formats import introduction_format
 from bot.helpers.utils import is_num, translator
 from bot.keyboards.keyboard_buttons import option
 from bot.keyboards.keyboards import (
-    instructor_pages_keyboard, student_pages_keyboard, language_keyboard, send_contact_keyboard, type_keyboard
+    instructor_pages_keyboard,
+    student_pages_keyboard,
+    language_keyboard,
+    send_contact_keyboard,
+    type_keyboard,
+    subjects_sections_keyboard
 )
 from bot.states.user import UserStates
 
@@ -104,6 +109,26 @@ async def requesting_user_phone_handler(message: Message, state: FSMContext):
         await message.answer(error_message)
         return
 
+    user_type = User.TypeChoices.INSTRUCTOR \
+        if message.text in [option['types']['uz']['instructor'], option['types']['ru']['instructor']] else \
+        User.TypeChoices.STUDENT
+
+    async with state.proxy() as data:
+        data['user_type'] = user_type
+
+    if user_type == User.TypeChoices.INSTRUCTOR:
+        subjects = await subject_controller.get_all(dict(status=StatusChoices.ACTIVE))
+
+        message_text = translator(
+            "Qaysi fandan instruktorlik qilasiz", "«Какой предмет вы преподаете»", data['user_language']
+        )
+
+        await UserStates.subject.set()
+
+        await message.answer(message_text, reply_markup=subjects_sections_keyboard(subjects, data['user_language']))
+
+        return
+
     first_message = translator('Telefon raqamingizni ulashing', 'Поделитесь своим контактом', data['user_language'])
     second_message = translator(
         f"Contactingizni jo'natish uchun {option['send']['uz']} ni bosing",
@@ -111,12 +136,44 @@ async def requesting_user_phone_handler(message: Message, state: FSMContext):
         data['user_language']
     )
 
-    user_type = User.TypeChoices.INSTRUCTOR \
-        if message.text in [option['types']['uz']['instructor'], option['types']['ru']['instructor']] else \
-        User.TypeChoices.STUDENT
+    await UserStates.phone.set()
+
+    await message.answer(first_message)
+    await message.answer(second_message, reply_markup=send_contact_keyboard(data['user_language']))
+
+
+@dp.message_handler(state=UserStates.subject)
+async def requesting_instructor_subject_handler(message: Message, state: FSMContext):
+    data = await state.get_data()
+
+    if is_num(message.text):
+        error_message = translator(
+            "Ism sonlardan iborat bo'lmaydi", "Имя не будет состоять из цифр", data['user_language']
+        )
+        await message.answer(error_message)
+        return
+
+    subject_query = translator(dict(name_uz=message.text), dict(name_ru=message.text), data['user_language'])
+
+    subject = await subject_controller.get_one(subject_query)
+
+    if not subject:
+        error_message = translator(
+            "Berilgan fanlardan birini tanlang", "Выберите один из предложенных предметов", data['user_language']
+        )
+
+        await message.answer(error_message)
+        return
 
     async with state.proxy() as data:
-        data['user_type'] = user_type
+        data['user_subject'] = subject.id
+
+    first_message = translator('Telefon raqamingizni ulashing', 'Поделитесь своим контактом', data['user_language'])
+    second_message = translator(
+        f"Contactingizni jo'natish uchun {option['send']['uz']} ni bosing",
+        f"Нажмите {option['send']['ru']} тобы отправить ваш контакт",
+        data['user_language']
+    )
 
     await UserStates.phone.set()
 
@@ -148,7 +205,7 @@ async def user_creation_handler(message: Message, state: FSMContext):
         'Registratsiya muvaffaqqiyatli yakunlandi', 'Регистрация успешно завершена', data['user_language']
     )
 
-    await user_controller.make(dict(
+    user_data = dict(
         telegram_id=message.from_user.id,
         name=data.get('user_name'),
         username=message.from_user.username,
@@ -156,7 +213,12 @@ async def user_creation_handler(message: Message, state: FSMContext):
         lang=data.get('user_language'),
         type=data.get('user_type'),
         status=StatusChoices.ACTIVE
-    ))
+    )
+
+    if data.get('user_subject'):
+        user_data.update(subject_id=data['user_subject'])
+
+    await user_controller.make(user_data)
 
     await UserStates.process.set()
 
@@ -169,4 +231,8 @@ async def user_creation_handler(message: Message, state: FSMContext):
     async with state.proxy() as data:
         del data['user_language']
         del data['user_type']
+
+        if data.get('user_subject'):
+            del data['user_subject']
+
         del data['user_name']

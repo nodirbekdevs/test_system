@@ -17,6 +17,7 @@ class User(db.Model):
 
     id = db.Column(db.BigInteger(), primary_key=True)
     telegram_id = db.Column(db.BigInteger(), nullable=True)
+    subject_id = db.Column(db.ForeignKey('main_subject.id', ondelete='CASCADE'))
     name = db.Column(db.String(255), nullable=True)
     username = db.Column(db.String(255), nullable=True)
     number = db.Column(db.String(255), nullable=True)

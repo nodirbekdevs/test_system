@@ -1,10 +1,33 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from bot.helpers.config import IS_SUBSCRIBED, ADMIN, SECTION, TEST, INSTRUCTOR, SUBJECT, STUDENT, SEEN, DONE
 from bot.keyboards.keyboard_buttons import admin, instructor, student, option, all
+# from bot.helpers.utils import generate_variants
+
+
+def generate_variants(item_count):
+    base = ord('a')
+    return [chr(base + i) for i in range(len(item_count))]
 
 
 def language_definer(language):
     return 'uz' if language == option['language']['uz'] else 'ru'
+
+
+def all_users_keyboard(users, language, limit=3):
+    buttons, arr = [], []
+
+    for user in users:
+        arr.append(KeyboardButton(user.name))
+
+        if len(arr) % limit == 0:
+            buttons.append(arr)
+            arr = []
+
+    buttons.append(arr)
+
+    buttons.append([option['back'][language_definer(language)]])
+
+    return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
 
 def admin_pages_keyboard(language):
@@ -225,8 +248,6 @@ def subjects_sections_keyboard(datas, language, limit=3):
     buttons, arr = [], []
 
     for data in datas:
-        print(data.__dict__)
-
         if language == option['language']['uz']:
             arr.append(KeyboardButton(data.name_uz))
         elif language == option['language']['ru']:
@@ -358,3 +379,40 @@ def confirmation_with_back_keyboard(language):
     ]
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+
+
+def start_test_keyboard(language):
+    lang = language_definer(language)
+
+    text = "Test ishlashni boshlash" if language == option['language']['uz'] else "Начать тестовый запуск"
+
+    buttons = [
+        [InlineKeyboardButton(text=text, callback_data='start_test')],
+        [InlineKeyboardButton(text=option['back'][lang], callback_data='delete')]
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def test_solution_keyboard(test, language, answer=False):
+    lang, variants = language_definer(language), generate_variants(test['variants_uz'])
+
+    buttons = []
+
+    for test_variant, variant in zip(test[f'variants_{lang}'], variants):
+        button_text = f'{variant.upper()}. {test_variant}'
+
+        if answer and answer == test_variant:
+            button_text = f'{variant.upper()}. {test_variant} ✅'
+
+        buttons.append([InlineKeyboardButton(text=button_text, callback_data=f'solving_{test_variant}')])
+
+    buttons.append([InlineKeyboardButton(text=option['finish'][lang], callback_data='finish_test')])
+
+    buttons.append([
+        InlineKeyboardButton(text='⬅', callback_data='prev_test'),
+        InlineKeyboardButton(text='❌', callback_data="delete"),
+        InlineKeyboardButton(text='➡', callback_data='next_test')
+    ])
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

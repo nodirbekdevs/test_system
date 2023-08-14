@@ -7,4 +7,5 @@ class UserStates(StatesGroup):
     type = State()
     language = State()
     name = State()
+    subject = State()
     phone = State()
