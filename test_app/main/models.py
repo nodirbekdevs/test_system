@@ -39,6 +39,7 @@ class User(CreateUpdateTracker):
         ADMIN = 'ADN', 'Админ'
 
     telegram_id = models.PositiveBigIntegerField(**nb)
+    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, **nb)
     name = models.CharField(max_length=255, **nb)
     username = models.CharField(max_length=255, **nb)
     number = models.CharField(max_length=255, **nb)
