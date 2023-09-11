@@ -85,9 +85,12 @@ class Pagination:
                 )
                 keyboard = instructor_keyboard(TEST, language)
             elif self.data_type == 'PLACE':
-                text = "Hozircha bu tip uchun tabriklar qo'shilmagan" \
-                    if language == option['language']['uz'] else \
-                    "Поздравления для этого типа пока не добавлены"
+                text = translator(
+                    "Hozircha bu tip uchun tabriklar qo'shilmagan",
+                    "Поздравления для этого типа пока не добавлены",
+                    language
+                )
+
             elif self.data_type == 'ADVERTISING':
                 text = translator("Hozircha reklamalar qo'shilmagan", "Объявления еще не добавлены", language)
                 keyboard = admin_advertisements_keyboard(language)

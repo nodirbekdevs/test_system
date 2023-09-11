@@ -2,25 +2,26 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from bot.loader import dp
-from bot.filters.is_admin_and_instructor import IsAdminAndInstructor
 from bot.filters.is_admin import IsAdmin
 from bot.helpers.config import INSTRUCTOR
 from bot.controllers import user_controller
 from bot.models.user import User
-from bot.keyboards.keyboards import admin_keyboard, one_admin_keyboard, back_keyboard
-from bot.keyboards.keyboard_buttons import admin, option
+from bot.keyboards.keyboards import admin_keyboard, one_admin_keyboard
+from bot.keyboards.keyboard_buttons import admin
 from bot.helpers.utils import Pagination, translator
 from bot.helpers.formats import user_format
-from bot.helpers.config import STUDENT
 from bot.states.students import StudentStates
+from bot.states.instructors import InstructorStates
 from bot.states.user import UserStates
 
 
 @dp.message_handler(
-    IsAdmin(), text=[admin['pages']['uz']['students'], admin['pages']['ru']['students']], state=UserStates.process
+    IsAdmin(), text=[admin['pages']['uz']['instructors'], admin['pages']['ru']['instructors']], state=UserStates.process
 )
 async def admin_students_handler(message: Message, state: FSMContext):
-    paginated = await Pagination("STUDENT").paginate(1, 6, dict(type=User.TypeChoices.STUDENT), user.lang)
+    user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
+
+    paginated = await Pagination("INSTRUCTOR").paginate(1, 6, dict(type=User.TypeChoices.STUDENT), user.lang)
 
     if paginated['status']:
         await StudentStates.all_students.set()
@@ -34,7 +35,7 @@ async def admin_students_handler(message: Message, state: FSMContext):
 async def all_instructors_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
-    paginated = await Pagination("INSTRUCTORS").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
+    paginated = await Pagination("INSTRUCTOR").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
 
     if paginated['status']:
         await InstructorStates.all_instructors.set()
@@ -46,13 +47,13 @@ async def all_instructors_handler(message: Message, state: FSMContext):
 async def back_from_all_instructors_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    message_text = "Instructorlar sahifasi" if user.lang == option['language']['uz'] else "Страница инструкторов"
+    message_text = translator("Instructorlar sahifasi", "Страница инструкторов", user.lang)
 
     await InstructorStates.process.set()
 
     await query.message.delete()
 
-    await query.message.answer(text=message_text, reply_markup=admin_instructors_keyboard(user.lang))
+    await query.message.answer(text=message_text, reply_markup=admin_keyboard(INSTRUCTOR, user.lang))
 
 
 @dp.callback_query_handler(
@@ -65,7 +66,7 @@ async def pagination_instructors_handler(query: CallbackQuery, state: FSMContext
 
     page = int(query.data.split("#")[2])
 
-    paginated = await Pagination("INSTRUCTORS").paginate(page, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
+    paginated = await Pagination("INSTRUCTOR").paginate(page, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
 
     await query.message.edit_text(text=paginated['message'], reply_markup=paginated['keyboard'])
 
@@ -82,7 +83,7 @@ async def get_instructors_handler(query: CallbackQuery, state: FSMContext):
 
     await query.message.edit_text(
         text=user_format(selected_instructor, user.lang),
-        reply_markup=one_admin_instructor_keyboard(id, INSTRUCTOR)
+        reply_markup=one_admin_keyboard(id, user.lang, INSTRUCTOR)
     )
 
 
@@ -90,7 +91,7 @@ async def get_instructors_handler(query: CallbackQuery, state: FSMContext):
 async def back_from_get_instructor_handler(query: CallbackQuery, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=query.from_user.id))
 
-    paginated = await Pagination("INSTRUCTORS").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
+    paginated = await Pagination("INSTRUCTOR").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
 
     if paginated['status']:
         await InstructorStates.all_instructors.set()
@@ -109,7 +110,7 @@ async def delete_instructor_handler(query: CallbackQuery, state: FSMContext):
 
     await user_controller.delete(dict(id=id))
 
-    paginated = await Pagination("INSTRUCTORS").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
+    paginated = await Pagination("INSTRUCTOR").paginate(1, 6, dict(type=User.TypeChoices.INSTRUCTOR), user.lang)
 
     if not paginated['status']:
         await InstructorStates.process.set()

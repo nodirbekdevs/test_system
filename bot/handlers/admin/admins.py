@@ -9,7 +9,7 @@ from bot.keyboards.keyboards import admin_keyboard, one_admin_keyboard, back_key
 from bot.keyboards.keyboard_buttons import admin, option
 from bot.helpers.utils import Pagination, is_num, translator
 from bot.helpers.config import ADMIN
-from bot.helpers.formats import user_format
+from bot.helpers.formats import user_format, back_format
 from bot.states.admin import AdminStates
 from bot.states.user import UserStates
 
@@ -44,7 +44,6 @@ async def all_admins_handler(message: Message, state: FSMContext):
 @dp.callback_query_handler(IsAdmin(), lambda query: query.data == "delete", state=AdminStates.all_admins)
 async def back_from_all_admins_handler(query: CallbackQuery, state: FSMContext):
     await query.message.delete()
-
     await admin_admins_handler(query.message, state)
 
 
@@ -128,7 +127,7 @@ async def add_admin_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await message.answer(error_message)
         await admin_admins_handler(message, state)
         return

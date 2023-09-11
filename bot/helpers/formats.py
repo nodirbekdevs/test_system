@@ -294,3 +294,7 @@ def advertising_number_format(data, language):
         )
 
     return message
+
+
+def back_format(language):
+    return translator("Bekor qilindi", "Отменено", language)

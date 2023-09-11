@@ -215,7 +215,7 @@ async def requesting_description_handler(message: Message, state: FSMContext):
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await message.answer(error_message, reply_markup=instructor_keyboard(SECTION, user.lang))
         return
 
@@ -251,7 +251,7 @@ async def checking_section_creation_handler(message: Message, state: FSMContext)
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await SectionStates.process.set()
         await message.answer(error_message, reply_markup=instructor_keyboard(SECTION, user.lang))
         return

@@ -5,7 +5,7 @@ from bot.loader import dp
 from bot.filters.is_not_admin import IsNotAdmin
 from bot.controllers import user_controller, feedback_controller
 from bot.models.feedback import StatusChoices
-from bot.helpers.formats import feedback_all_format
+from bot.helpers.formats import feedback_all_format, back_format
 from bot.helpers.utils import translator
 from bot.keyboards.keyboard_buttons import option, instructor, all
 from bot.keyboards.keyboards import student_instructor_feedback_keyboard, feedback_keyboard, back_keyboard
@@ -48,7 +48,7 @@ async def requesting_student_instructor_feedback_reason_handler(message: Message
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
 
         await message.answer(error_message)
         await student_instructor_feedback_handler(message, state)
@@ -84,7 +84,7 @@ async def creation_student_instructor_feedback_handler(message: Message, state: 
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
 
         await message.answer(error_message)
         await student_instructor_feedback_handler(message, state)

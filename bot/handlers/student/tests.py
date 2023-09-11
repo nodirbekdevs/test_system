@@ -14,7 +14,7 @@ from bot.keyboards.keyboards import (
 from bot.filters.is_student import IsStudent
 from bot.keyboards.keyboard_buttons import student, option
 from bot.helpers.utils import is_num, translator
-from bot.helpers.formats import checking_solved_tests_format, test_solution_format
+from bot.helpers.formats import checking_solved_tests_format, test_solution_format, back_format
 from bot.states.test import TestStates
 from bot.states.user import UserStates
 
@@ -51,7 +51,7 @@ async def get_subject_handler(message: Message, state: FSMContext):
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await UserStates.process.set()
         await message.answer(error_message, reply_markup=student_pages_keyboard(user.lang))
         return
@@ -92,7 +92,7 @@ async def get_instructor_handler(message: Message, state: FSMContext):
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await UserStates.process.set()
         await message.answer(error_message, reply_markup=student_pages_keyboard(user.lang))
         return
@@ -143,7 +143,7 @@ async def request_start_handler(message: Message, state: FSMContext):
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await UserStates.process.set()
         await message.answer(error_message, reply_markup=student_pages_keyboard(user.lang))
         return

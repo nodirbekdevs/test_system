@@ -135,7 +135,7 @@ async def creating_instructor_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
 
         await message.answer(error_message)
         await admin_instructors_handler(message, state)

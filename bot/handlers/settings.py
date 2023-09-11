@@ -6,11 +6,7 @@ from bot.controllers import user_controller
 from bot.helpers.formats import user_format
 from bot.helpers.utils import is_num, translator
 from bot.keyboards.keyboard_buttons import admin, option, all
-from bot.keyboards.keyboards import (
-    settings_keyboard,
-    language_keyboard,
-    back_keyboard
-)
+from bot.keyboards.keyboards import settings_keyboard, language_keyboard, back_keyboard
 from bot.states.settings import SettingsStates
 from bot.states.user import UserStates
 

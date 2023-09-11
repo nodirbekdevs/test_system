@@ -16,7 +16,7 @@ from bot.keyboards.keyboards import instructor_keyboard, one_instructor_keyboard
 from bot.filters.is_instructor import IsInstructor
 from bot.keyboards.keyboard_buttons import instructor, option
 from bot.helpers.utils import Pagination, is_num, translator, translate_text
-from bot.helpers.formats import test_format
+from bot.helpers.formats import test_format, back_format
 from bot.helpers.config import TEST
 from bot.states.test import TestStates
 from bot.states.user import UserStates
@@ -295,7 +295,7 @@ async def requesting_image_handler(message: Message, state: FSMContext):
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await TestStates.process.set()
         await message.answer(error_message, reply_markup=instructor_keyboard(TEST, user.lang))
         return
@@ -346,7 +346,7 @@ async def requesting_question_handler(message: Message, state: FSMContext):
             return
 
         if message.text in [option['back']['uz'], option['back']['ru']]:
-            error_message = translator("Bekor qilindi", "Отменено", user.lang)
+            error_message = back_format(user.lang)
             await TestStates.process.set()
             await message.answer(error_message, reply_markup=instructor_keyboard(TEST, user.lang))
             return
@@ -378,7 +378,7 @@ async def requesting_variants_handler(message: Message, state: FSMContext):
         return
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await TestStates.process.set()
         await message.answer(error_message, reply_markup=instructor_keyboard(TEST, user.lang))
         return
@@ -410,7 +410,7 @@ async def requesting_correct_answer_handler(message: Message, state: FSMContext)
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await TestStates.process.set()
         await message.answer(error_message, reply_markup=instructor_keyboard(TEST, user.lang))
         return
@@ -432,7 +432,7 @@ async def checking_creation_handler(message: Message, state: FSMContext):
     state_data = await state.get_data()
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await TestStates.process.set()
         await message.answer(error_message, reply_markup=instructor_keyboard(TEST, user.lang))
         return
@@ -489,7 +489,7 @@ async def test_creation_handler(message: Message, state: FSMContext):
         return
 
     if message.text in [option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['ru']['no']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await message.answer(error_message, reply_markup=instructor_keyboard(TEST, user.lang))
         return
 

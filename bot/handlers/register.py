@@ -7,6 +7,7 @@ from bot.helpers.formats import introduction_format
 from bot.helpers.utils import is_num, translator
 from bot.keyboards.keyboard_buttons import option
 from bot.keyboards.keyboards import (
+    admin_pages_keyboard,
     instructor_pages_keyboard,
     student_pages_keyboard,
     language_keyboard,
@@ -22,21 +23,21 @@ async def cmd_start(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if user:
-        if user.type == User.TypeChoices.ADMIN:
-            await UserStates.process.set()
-            return
+        keyboard = []
+
+        await UserStates.process.set()
 
         message_text = translator('Bosh sahifa', 'Домашняя страница', user.lang)
 
-        if user.type == User.TypeChoices.STUDENT:
-            await UserStates.process.set()
-            await message.answer(message_text, reply_markup=student_pages_keyboard(user.lang))
-            return
+        if user.type == User.TypeChoices.ADMIN:
+            keyboard = admin_pages_keyboard(user.lang)
+        elif user.type == User.TypeChoices.STUDENT:
+            keyboard = student_pages_keyboard(user.lang)
+        elif user.type == User.TypeChoices.INSTRUCTOR:
+            keyboard = instructor_pages_keyboard(user.lang)
 
-        if user.type == User.TypeChoices.INSTRUCTOR:
-            await UserStates.process.set()
-            await message.answer(message_text, reply_markup=instructor_pages_keyboard(user.lang))
-            return
+        await message.answer(message_text, reply_markup=keyboard)
+        return
 
     await UserStates.language.set()
 

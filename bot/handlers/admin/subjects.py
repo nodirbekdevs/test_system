@@ -2,7 +2,6 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from deep_translator import GoogleTranslator
-from asyncio import to_thread
 
 from bot.loader import dp
 from bot.filters.is_admin import IsAdmin
@@ -11,7 +10,7 @@ from bot.models.subject import StatusChoices
 from bot.keyboards.keyboards import admin_keyboard, one_admin_keyboard, back_keyboard, confirmation_keyboard
 from bot.keyboards.keyboard_buttons import admin, option
 from bot.helpers.utils import Pagination, is_num, translator, translate_text
-from bot.helpers.formats import subject_format
+from bot.helpers.formats import subject_format, back_format
 from bot.helpers.config import SUBJECT
 from bot.states.subject import SubjectStates
 from bot.states.user import UserStates
@@ -74,8 +73,8 @@ async def get_subject_handler(query: CallbackQuery, state: FSMContext):
     selected_subject = await subject_controller.get_one(dict(id=id))
 
     data = dict(
-        name=selected_subject.name_uz if user.lang == option['language']['uz'] else selected_subject.name_ru,
-        description=selected_subject.description_uz if user.lang == option['language']['uz'] else selected_subject.description_ru,
+        name=translator(selected_subject.name_uz, selected_subject.name_ru, user.lang),
+        description=translator(selected_subject.description_uz, selected_subject.description_ru, user.lang),
         status=selected_subject.status,
         created_at=selected_subject.created_at
     )
@@ -140,7 +139,7 @@ async def requesting_description_handler(message: Message, state: FSMContext):
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await message.answer(error_message)
         await admin_subjects_handler(message, state)
         return
@@ -174,7 +173,7 @@ async def checking_creation_subject_handler(message: Message, state: FSMContext)
     user = await user_controller.get_one(dict(telegram_id=message.from_user.id))
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await message.answer(error_message)
         await admin_subjects_handler(message, state)
         return
@@ -217,7 +216,7 @@ async def subject_creation_handler(message: Message, state: FSMContext):
         return
 
     if message.text in [option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['ru']['no']]:
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
 
         await message.answer(error_message, reply_markup=admin_keyboard(SUBJECT, user.lang))
         return

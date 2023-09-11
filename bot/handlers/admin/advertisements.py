@@ -11,7 +11,7 @@ from bot.loader import dp
 from bot.controllers import user_controller, advertising_controller
 from bot.models.advertising import StatusChoices
 from bot.filters.is_admin import IsAdmin
-from bot.helpers.formats import advertising_format, advertising_number_format
+from bot.helpers.formats import advertising_format, advertising_number_format, back_format
 from bot.helpers.utils import Pagination, translator
 from bot.keyboards.keyboard_buttons import admin, option
 from bot.keyboards.keyboards import (
@@ -225,7 +225,7 @@ async def requesting_advertising_title_handler(message: Message, state: FSMConte
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         await AdvertisingStates.process.set()
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
@@ -250,7 +250,7 @@ async def requesting_advertising_description_handler(message: Message, state: FS
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         await AdvertisingStates.process.set()
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
@@ -269,7 +269,7 @@ async def check_advertising_creation_handler(message: Message, state: FSMContext
 
     if message.text in [option['back']['uz'], option['back']['ru']]:
         await AdvertisingStates.process.set()
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
@@ -310,7 +310,7 @@ async def advertising_creation_handler(message: Message, state: FSMContext):
     if message.text in [option['confirmation_advertising']['uz']['no'], option['confirmation_advertising']['ru']['no']]:
         await AdvertisingStates.process.set()
 
-        error_message = translator("Bekor qilindi", "Отменено", user.lang)
+        error_message = back_format(user.lang)
         await message.answer(error_message, reply_markup=admin_advertisements_keyboard(user.lang))
         return
 
